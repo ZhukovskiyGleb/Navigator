@@ -2,11 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Logger</title>
-    <script data-main="config.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <title>YouScan</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="app"></div>
-<script src="app.js"></script>
+    <header>
+        <h1>Test task for YouScan</h1>
+        <hr>
+    </header>
+    <section class="main-container">
+        <div class="main-column">
+            <div class="left-container">
+                <div class="game-map">
+                    <div id="game" style="display: block">GAME</div>
+                    <div id="edit" style="display: none">EDIT</div>
+                </div>
+                <div class="game-settings">
+                    <button type="button" id="edit-button">Edit map</button>
+                </div>
+            </div>
+        </div>
+        <div class="main-column">
+            <div><button type="button" id="start-button">Start</button></div>
+            <textarea id="log-area" readonly>Test</textarea>
+        </div>
+    </section>
+    <footer>
+        <hr>
+        By Gleb Zhukovskiy
+    </footer>
+    <script data-main="config.js" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
 </body>
 </html>

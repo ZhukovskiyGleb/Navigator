@@ -1,7 +1,7 @@
 requirejs.config({
     baseUrl: './',
     paths: {
-        'app':'final'
+        'app':'app'
     }
 });
 

@@ -1,0 +1,49 @@
+header {
+    text-align: center;
+}
+footer {
+    text-align: center;
+    font-weight: bold;
+    align-self: end;
+}
+button[type=button] {
+    background-color: cornflowerblue;
+    border-radius: 75px;
+    border-color: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+button:disabled,
+button[disabled] {
+    background-color: darkgray;
+}
+.main-container {
+    display: flex;
+}
+.main-column {
+    flex: 50%;
+    margin: 2%;
+    text-align: center;
+}
+.left-container {
+    display: table;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+game-map {
+    display: table-row;
+    height: 90%;
+}
+game-settings {
+    display: table-row;
+    height: 10%;
+}
+
+#log-area {
+    width: 100%;
+    margin-top: 2%;
+    resize: vertical;
+}
