@@ -1,10 +1,13 @@
 header {
+    display: none;
     text-align: center;
+    background-color: aliceblue;
 }
 footer {
+    display: none;
     text-align: center;
     font-weight: bold;
-    align-self: end;
+    background-color: aliceblue;
 }
 button[type=button] {
     background-color: cornflowerblue;
@@ -18,6 +21,11 @@ button:disabled,
 button[disabled] {
     background-color: darkgray;
 }
+.wrapper {
+    /*display: none;*/
+    height: 100%;
+    width: 100%;
+}
 .main-container {
     display: flex;
 }
@@ -26,27 +34,34 @@ button[disabled] {
     margin: 2%;
     text-align: center;
 }
-.left-container {
+.game-container {
     display: table;
     height: 100%;
     margin: 0;
     padding: 0;
     width: 100%;
 }
-game-map {
+.game-map {
     display: table-row;
     height: 90%;
 }
-game-settings {
+.game-settings {
     display: table-row;
     height: 10%;
 }
 
-#log-area {
+#log-area, #edit-area {
     width: 100%;
     margin-top: 2%;
     resize: vertical;
     min-height: 20rem;
     /*border: none !important;*/
     /*overflow: hidden;*/
+}
+
+#edit-area {
+    line-height: 90%;
+    letter-spacing: 5px;
+    font-weight: bold;
+    font-size: 25px;
 }

@@ -6,27 +6,38 @@ export enum Direction {
 }
 
 export interface PlayerPosition {
-    posX: number,
-    posY: number,
+    row: number,
+    col: number,
     direction: Direction
+}
+
+export interface ExitPosition {
+    row: number
+    col: number,
 }
 
 export class MapModel {
     private readonly WALL_SIGN = '#';
+    private readonly EXIT_SIGN = '@';
+    private readonly UP_SIGN = '^';
+    private readonly DOWN_SIGN = '_';
+    private readonly LEFT_SIGN = '<';
+    private readonly RIGHT_SIGN = '>';
     private readonly DIRECTION_SIGNS : {[key: string]: Direction} = {
-      '^': Direction.UP,
-      '_': Direction.DOWN,
-      '<': Direction.LEFT,
-      '>': Direction.RIGHT
+        [this.UP_SIGN]:     Direction.UP,
+        [this.DOWN_SIGN]:   Direction.DOWN,
+        [this.LEFT_SIGN]:   Direction.LEFT,
+        [this.RIGHT_SIGN]:  Direction.RIGHT
     };
 
     private _map: Array<Array<boolean>> = [];
+    private _playerPosition?: PlayerPosition;
+    private _exitPosition?: ExitPosition;
 
-    public init(mapText: string): PlayerPosition | null {
-        if (!mapText) return null;
+    public init(mapText: string | null): boolean {
+        if (!mapText) return false;
 
-        this._map = new Array<Array<boolean>>();
-        let playerPosition: PlayerPosition | null = null;
+        this.clear();
 
         mapText.split('\n')
             .forEach((row: string, i: number) => {
@@ -41,28 +52,68 @@ export class MapModel {
                             this._map[i][j] = true;
 
                             if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
-                                if (playerPosition) {
+                                if (this._playerPosition) {
                                     console.log('Warning! Player position duplication!');
                                 }
-                                playerPosition = {
-                                    posX: i,
-                                    posY: j,
+                                this._playerPosition = {
+                                    row: i,
+                                    col: j,
                                     direction: this.DIRECTION_SIGNS[sign]
+                                };
+                            }
+                            else if (sign === this.EXIT_SIGN) {
+                                if (this._exitPosition) {
+                                    console.log('Warning! Exit position duplication!');
+                                }
+                                this._exitPosition = {
+                                    row: i,
+                                    col: j
                                 };
                             }
                         }
                     });
             });
 
-        if (!playerPosition) {
-            return null;
+        if (!this._playerPosition) {
+            const keys = Object.keys({...this.DIRECTION_SIGNS});
+            console.log(`Error! Player position [${keys}] not found`);
+            return false;
+        }
+        if (!this._exitPosition) {
+            console.log(`Warning! Exit position [${this.EXIT_SIGN}] not found`);
         }
 
-        return playerPosition;
+        return true;
     }
 
-    public get map(): Array<Array<boolean>> {
+    private clear(): void {
+        this._map = new Array<Array<boolean>>();
+        this._playerPosition = undefined;
+        this._exitPosition = undefined;
+    }
+
+    public get content(): Array<Array<boolean>> {
         return this._map;
+    }
+
+    public get clone(): Array<Array<boolean>> {
+        const clone = new Array<Array<boolean>>();
+        this._map.forEach((row: Array<boolean>) => {
+            clone.push([...row]);
+        });
+        return clone;
+    }
+
+    public get player(): PlayerPosition {
+        return this._playerPosition || {
+            row: 0,
+            col: 0,
+            direction: Direction.UP
+        };
+    }
+
+    public get exit(): ExitPosition | undefined {
+        return this._exitPosition;
     }
 
     public get height(): number {

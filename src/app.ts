@@ -1,20 +1,26 @@
-import {MapModel} from "./models/map.model";
+import {ControlsService} from "./services/controls.service";
+import {MapEditService} from "./services/map-edit.service";
 
 class Main {
-    private mapModel = new MapModel();
+    private readonly _controlsService = new ControlsService();
+    private readonly _mapEditService = new MapEditService(this._controlsService);
 
     public init(): void {
-        const logArea: HTMLTextAreaElement = document.getElementById('log-area') as HTMLTextAreaElement;
-        if (logArea) {
-
-        }
-
-        this.mapModel = new MapModel();
-        this.mapModel.init('#####\n# > #\n#####');
-
-        console.log(this.mapModel.height, this.mapModel.width);
+        // PathFinder.find(
+        //     this._mapEditService.map.content,
+        //     {
+        //         row: this._mapEditService.map.player.row,
+        //         col: this._mapEditService.map.player.col
+        //     },
+        //     this._mapEditService.map.exit ? {
+        //         row: this._mapEditService.map.exit.row,
+        //         col: this._mapEditService.map.exit.col
+        //     } : undefined)
     }
+
 }
+
+
 
 const app = new Main();
 app.init();
