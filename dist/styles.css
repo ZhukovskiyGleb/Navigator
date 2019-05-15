@@ -20,6 +20,7 @@ button[type=button] {
 button:disabled,
 button[disabled] {
     background-color: darkgray;
+    cursor: default;
 }
 .wrapper {
     /*display: none;*/

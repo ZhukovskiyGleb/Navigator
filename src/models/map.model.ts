@@ -1,3 +1,5 @@
+import {Cell, PathFinder} from "../utils/path-finder.util";
+
 export enum Direction {
     UP = 1,
     DOWN = 2,
@@ -33,6 +35,7 @@ export class MapModel {
     private _map: Array<Array<boolean>> = [];
     private _playerPosition?: PlayerPosition;
     private _exitPosition?: ExitPosition;
+    private _path?: Array<Cell>;
 
     public init(mapText: string | null): boolean {
         if (!mapText) return false;
@@ -53,7 +56,7 @@ export class MapModel {
 
                             if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
                                 if (this._playerPosition) {
-                                    console.log('Warning! Player position duplication!');
+                                    console.log('Warning: Player position duplication!');
                                 }
                                 this._playerPosition = {
                                     row: i,
@@ -63,7 +66,7 @@ export class MapModel {
                             }
                             else if (sign === this.EXIT_SIGN) {
                                 if (this._exitPosition) {
-                                    console.log('Warning! Exit position duplication!');
+                                    console.log('Warning: Exit position duplication!');
                                 }
                                 this._exitPosition = {
                                     row: i,
@@ -76,11 +79,27 @@ export class MapModel {
 
         if (!this._playerPosition) {
             const keys = Object.keys({...this.DIRECTION_SIGNS});
-            console.log(`Error! Player position [${keys}] not found`);
+            console.log(`Error: Player position [${keys}] not found!`);
             return false;
         }
         if (!this._exitPosition) {
-            console.log(`Warning! Exit position [${this.EXIT_SIGN}] not found`);
+            console.log(`Warning: Exit position [${this.EXIT_SIGN}] not found!`);
+        }
+
+        this._path = PathFinder.find(
+            this._map,
+            {
+                row: this._playerPosition.row,
+                col: this._playerPosition.col
+            },
+            this._exitPosition ? {
+                row: this._exitPosition.row,
+                col: this._exitPosition.col
+            } : undefined);
+
+        if (this._path.length === 0) {
+            console.log('Error: Path not found!');
+            return false;
         }
 
         return true;
@@ -122,5 +141,9 @@ export class MapModel {
 
     public get width(): number {
         return this._map && this._map[0] ? this._map[0].length : 0;
+    }
+
+    public get path():Array<Cell> {
+        return this._path || [];
     }
 }

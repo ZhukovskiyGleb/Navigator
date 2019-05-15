@@ -60,7 +60,6 @@ export class PathFinder {
         nextSteps.length = 0;
 
         if (!pathFound) {
-            console.log('Path not found!');
             pathMap.length = 0;
 
             return  [];
@@ -98,6 +97,8 @@ export class PathFinder {
                 }
             });
         }
+
+        pathMap.length = 0;
 
         return result;
     }

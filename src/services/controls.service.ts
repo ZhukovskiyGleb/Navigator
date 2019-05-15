@@ -4,8 +4,9 @@ export enum EditStates {
 }
 
 export enum StartStates {
-    START = 'Start',
-    STOP = 'Stop'
+    PLAY = 'Play',
+    STOP = 'Stop',
+    PAUSE = 'Pause'
 }
 
 export class ControlsService {

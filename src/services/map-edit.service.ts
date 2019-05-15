@@ -10,7 +10,7 @@ export class MapEditService {
 
     private readonly _map: MapModel = new MapModel();
 
-    private _inEditMode:Boolean = false;
+    private _inEditMode?:Boolean;
 
     constructor(private _controlsService: ControlsService) {
         this._gameTab = document.getElementById('game-tab') as HTMLDivElement;
@@ -24,27 +24,32 @@ export class MapEditService {
 
     private loadDefaultMap(): void {
         this._editArea.textContent = this.DEFAULT_MAP;
-        this._map.init(this.DEFAULT_MAP);
+        this.toggleEditMode(false);
     }
 
-    public onEditClick(): void {
-        this._inEditMode = !this._inEditMode;
+    private onEditClick(): void {
+        this.toggleEditMode(!this._inEditMode);
+    }
+
+    private toggleEditMode(value: boolean): void {
+        if (this._inEditMode === value) {
+            return;
+        }
+
+        this._inEditMode = value;
 
         if (this._inEditMode) {
             this._controlsService.deactivateStartButton();
             this._controlsService.switchEditState(EditStates.SAVE);
             this._gameTab.style.display = 'none';
             this._editTab.style.display = 'block';
-        }
-        else {
+        } else {
             if (this._map.init(this._editArea.value)) {
-                this._controlsService.activateEditButton();
+                this._controlsService.activateStartButton();
                 this._controlsService.switchEditState(EditStates.EDIT);
                 this._gameTab.style.display = 'block';
                 this._editTab.style.display = 'none';
-            }
-            else
-            {
+            } else {
                 alert('Wrong configuration!');
             }
         }

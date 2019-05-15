@@ -19,8 +19,9 @@ define("services/controls.service", ["require", "exports"], function (require, e
     })(EditStates = exports.EditStates || (exports.EditStates = {}));
     var StartStates;
     (function (StartStates) {
-        StartStates["START"] = "Start";
+        StartStates["PLAY"] = "Play";
         StartStates["STOP"] = "Stop";
+        StartStates["PAUSE"] = "Pause";
     })(StartStates = exports.StartStates || (exports.StartStates = {}));
     var ControlsService = /** @class */ (function () {
         function ControlsService() {
@@ -63,7 +64,107 @@ define("services/controls.service", ["require", "exports"], function (require, e
     }());
     exports.ControlsService = ControlsService;
 });
-define("models/map.model", ["require", "exports"], function (require, exports) {
+define("utils/path-finder.util", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var PathFinder = /** @class */ (function () {
+        function PathFinder() {
+        }
+        PathFinder.find = function (map, startPos, endPos) {
+            var _this = this;
+            var pathMap = new Array();
+            map.forEach(function (row) {
+                pathMap.push(row.slice());
+            });
+            var currentPos = {
+                row: startPos.row,
+                col: startPos.col
+            };
+            var targetPos;
+            var nextSteps = new Array();
+            pathMap[currentPos.row][currentPos.col] = 0;
+            var pathFound = false;
+            while (true) {
+                this.DIRECTIONS.forEach(function (direction) {
+                    targetPos = {
+                        row: currentPos.row + direction[0],
+                        col: currentPos.col + direction[1]
+                    };
+                    if (_this.isContains(pathMap, targetPos) && pathMap[targetPos.row][targetPos.col] === true) {
+                        pathMap[targetPos.row][targetPos.col] = pathMap[currentPos.row][currentPos.col] + 1;
+                        nextSteps.push(targetPos);
+                        if ((endPos && _this.isEqual(targetPos, endPos)) ||
+                            (!endPos && _this.isExit(pathMap, targetPos))) {
+                            endPos = targetPos;
+                            pathFound = true;
+                            return;
+                        }
+                    }
+                });
+                if (pathFound || nextSteps.length === 0) {
+                    break;
+                }
+                else {
+                    currentPos = nextSteps.shift();
+                }
+            }
+            nextSteps.length = 0;
+            if (!pathFound) {
+                pathMap.length = 0;
+                return [];
+            }
+            currentPos = endPos ? {
+                row: endPos.row,
+                col: endPos.col
+            } : {
+                row: startPos.row,
+                col: startPos.col
+            };
+            var result = new Array();
+            while (true) {
+                result.push(currentPos);
+                if (this.isEqual(currentPos, startPos)) {
+                    break;
+                }
+                this.DIRECTIONS.forEach(function (direction) {
+                    targetPos = {
+                        row: currentPos.row + direction[0],
+                        col: currentPos.col + direction[1]
+                    };
+                    if (_this.isContains(pathMap, targetPos)) {
+                        var value = pathMap[targetPos.row][targetPos.col];
+                        if (typeof value === "number" && value < pathMap[currentPos.row][currentPos.col]) {
+                            currentPos = targetPos;
+                            return;
+                        }
+                    }
+                });
+            }
+            pathMap.length = 0;
+            return result;
+        };
+        PathFinder.isContains = function (map, pos) {
+            return (pos.row >= 0 && pos.row < map.length &&
+                pos.col >= 0 && pos.col < map[pos.row].length);
+        };
+        PathFinder.isExit = function (map, pos) {
+            return (pos.row === 0 || pos.row === map.length - 1 ||
+                pos.col === 0 || (map.length > pos.row && pos.col === map[pos.row].length - 1));
+        };
+        PathFinder.isEqual = function (origin, target) {
+            return (origin.row === target.row && origin.col === target.col);
+        };
+        PathFinder.DIRECTIONS = [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1]
+        ];
+        return PathFinder;
+    }());
+    exports.PathFinder = PathFinder;
+});
+define("models/map.model", ["require", "exports", "utils/path-finder.util"], function (require, exports, path_finder_util_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Direction;
@@ -107,7 +208,7 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
                         _this._map[i][j] = true;
                         if (_this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
                             if (_this._playerPosition) {
-                                console.log('Warning! Player position duplication!');
+                                console.log('Warning: Player position duplication!');
                             }
                             _this._playerPosition = {
                                 row: i,
@@ -117,7 +218,7 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
                         }
                         else if (sign === _this.EXIT_SIGN) {
                             if (_this._exitPosition) {
-                                console.log('Warning! Exit position duplication!');
+                                console.log('Warning: Exit position duplication!');
                             }
                             _this._exitPosition = {
                                 row: i,
@@ -129,11 +230,22 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
             });
             if (!this._playerPosition) {
                 var keys = Object.keys(__assign({}, this.DIRECTION_SIGNS));
-                console.log("Error! Player position [" + keys + "] not found");
+                console.log("Error: Player position [" + keys + "] not found!");
                 return false;
             }
             if (!this._exitPosition) {
-                console.log("Warning! Exit position [" + this.EXIT_SIGN + "] not found");
+                console.log("Warning: Exit position [" + this.EXIT_SIGN + "] not found!");
+            }
+            this._path = path_finder_util_1.PathFinder.find(this._map, {
+                row: this._playerPosition.row,
+                col: this._playerPosition.col
+            }, this._exitPosition ? {
+                row: this._exitPosition.row,
+                col: this._exitPosition.col
+            } : undefined);
+            if (this._path.length === 0) {
+                console.log('Error: Path not found!');
+                return false;
             }
             return true;
         };
@@ -192,6 +304,13 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(MapModel.prototype, "path", {
+            get: function () {
+                return this._path || [];
+            },
+            enumerable: true,
+            configurable: true
+        });
         return MapModel;
     }());
     exports.MapModel = MapModel;
@@ -204,7 +323,6 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
             this._controlsService = _controlsService;
             this.DEFAULT_MAP = '#######\n#   #>#\n#   # #\n# # # #\n# #   #\n# #####';
             this._map = new map_model_1.MapModel();
-            this._inEditMode = false;
             this._gameTab = document.getElementById('game-tab');
             this._editTab = document.getElementById('edit-tab');
             this._editArea = document.getElementById('edit-area');
@@ -213,10 +331,16 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
         }
         MapEditService.prototype.loadDefaultMap = function () {
             this._editArea.textContent = this.DEFAULT_MAP;
-            this._map.init(this.DEFAULT_MAP);
+            this.toggleEditMode(false);
         };
         MapEditService.prototype.onEditClick = function () {
-            this._inEditMode = !this._inEditMode;
+            this.toggleEditMode(!this._inEditMode);
+        };
+        MapEditService.prototype.toggleEditMode = function (value) {
+            if (this._inEditMode === value) {
+                return;
+            }
+            this._inEditMode = value;
             if (this._inEditMode) {
                 this._controlsService.deactivateStartButton();
                 this._controlsService.switchEditState(controls_service_1.EditStates.SAVE);
@@ -225,7 +349,7 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
             }
             else {
                 if (this._map.init(this._editArea.value)) {
-                    this._controlsService.activateEditButton();
+                    this._controlsService.activateStartButton();
                     this._controlsService.switchEditState(controls_service_1.EditStates.EDIT);
                     this._gameTab.style.display = 'block';
                     this._editTab.style.display = 'none';
@@ -246,128 +370,86 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
     }());
     exports.MapEditService = MapEditService;
 });
-define("app", ["require", "exports", "services/controls.service", "services/map-edit.service"], function (require, exports, controls_service_2, map_edit_service_1) {
+define("services/logger.service", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var LoggerService = /** @class */ (function () {
+        function LoggerService() {
+            this._logArea = document.getElementById('log-area');
+        }
+        LoggerService.prototype.clear = function () {
+            this._logArea.textContent = '';
+        };
+        LoggerService.prototype.log = function (message) {
+            this._logArea.textContent = message + '\n' + this._logArea.value;
+        };
+        return LoggerService;
+    }());
+    exports.LoggerService = LoggerService;
+});
+define("services/game.service", ["require", "exports", "services/controls.service"], function (require, exports, controls_service_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var GameService = /** @class */ (function () {
+        function GameService(_controlsService, _loggerService, _mapService) {
+            this._controlsService = _controlsService;
+            this._loggerService = _loggerService;
+            this._mapService = _mapService;
+            this.STEP_TIME = 1000;
+            this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
+            this.togglePlayMode(false);
+        }
+        GameService.prototype.onStartClick = function () {
+            this.togglePlayMode(!this._isGameStarted);
+        };
+        GameService.prototype.togglePlayMode = function (value) {
+            if (this._isGameStarted === value) {
+                return;
+            }
+            this._isGameStarted = value;
+            if (this._isGameStarted) {
+                this._loggerService.clear();
+                this._loggerService.log('Game begins!');
+                this._controlsService.deactivateEditButton();
+                this._controlsService.switchStartState(controls_service_2.StartStates.PAUSE);
+                this.nextStep();
+            }
+            else {
+                this._controlsService.activateEditButton();
+                this._controlsService.switchStartState(controls_service_2.StartStates.PLAY);
+                if (this._timer) {
+                    clearTimeout(this._timer);
+                }
+            }
+        };
+        GameService.prototype.nextStep = function () {
+            var _this = this;
+            this._timer = setTimeout(function () {
+                // this._loggerService.log();
+                _this.nextStep();
+            }, this.STEP_TIME);
+        };
+        GameService.prototype.stopGame = function () {
+            this.togglePlayMode(false);
+        };
+        return GameService;
+    }());
+    exports.GameService = GameService;
+});
+define("app", ["require", "exports", "services/controls.service", "services/map-edit.service", "services/logger.service", "services/game.service"], function (require, exports, controls_service_3, map_edit_service_1, logger_service_1, game_service_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Main = /** @class */ (function () {
         function Main() {
-            this._controlsService = new controls_service_2.ControlsService();
+            this._controlsService = new controls_service_3.ControlsService();
             this._mapEditService = new map_edit_service_1.MapEditService(this._controlsService);
+            this._logerService = new logger_service_1.LoggerService();
+            this._gameService = new game_service_1.GameService(this._controlsService, this._logerService, this._mapEditService);
         }
         Main.prototype.init = function () {
-            // PathFinder.find(
-            //     this._mapEditService.map.content,
-            //     {
-            //         row: this._mapEditService.map.player.row,
-            //         col: this._mapEditService.map.player.col
-            //     },
-            //     this._mapEditService.map.exit ? {
-            //         row: this._mapEditService.map.exit.row,
-            //         col: this._mapEditService.map.exit.col
-            //     } : undefined)
         };
         return Main;
     }());
     var app = new Main();
     app.init();
-});
-define("utils/path-finder.util", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var PathFinder = /** @class */ (function () {
-        function PathFinder() {
-        }
-        PathFinder.find = function (map, startPos, endPos) {
-            var _this = this;
-            var pathMap = new Array();
-            map.forEach(function (row) {
-                pathMap.push(row.slice());
-            });
-            var currentPos = {
-                row: startPos.row,
-                col: startPos.col
-            };
-            var targetPos;
-            var nextSteps = new Array();
-            pathMap[currentPos.row][currentPos.col] = 0;
-            var pathFound = false;
-            while (true) {
-                this.DIRECTIONS.forEach(function (direction) {
-                    targetPos = {
-                        row: currentPos.row + direction[0],
-                        col: currentPos.col + direction[1]
-                    };
-                    if (_this.isContains(pathMap, targetPos) && pathMap[targetPos.row][targetPos.col] === true) {
-                        pathMap[targetPos.row][targetPos.col] = pathMap[currentPos.row][currentPos.col] + 1;
-                        nextSteps.push(targetPos);
-                        if ((endPos && _this.isEqual(targetPos, endPos)) ||
-                            (!endPos && _this.isExit(pathMap, targetPos))) {
-                            endPos = targetPos;
-                            pathFound = true;
-                            return;
-                        }
-                    }
-                });
-                if (pathFound || nextSteps.length === 0) {
-                    break;
-                }
-                else {
-                    currentPos = nextSteps.shift();
-                }
-            }
-            nextSteps.length = 0;
-            if (!pathFound) {
-                console.log('Path not found!');
-                pathMap.length = 0;
-                return [];
-            }
-            currentPos = endPos ? {
-                row: endPos.row,
-                col: endPos.col
-            } : {
-                row: startPos.row,
-                col: startPos.col
-            };
-            var result = new Array();
-            while (true) {
-                result.push(currentPos);
-                if (this.isEqual(currentPos, startPos)) {
-                    break;
-                }
-                this.DIRECTIONS.forEach(function (direction) {
-                    targetPos = {
-                        row: currentPos.row + direction[0],
-                        col: currentPos.col + direction[1]
-                    };
-                    if (_this.isContains(pathMap, targetPos)) {
-                        var value = pathMap[targetPos.row][targetPos.col];
-                        if (typeof value === "number" && value < pathMap[currentPos.row][currentPos.col]) {
-                            currentPos = targetPos;
-                            return;
-                        }
-                    }
-                });
-            }
-            return result;
-        };
-        PathFinder.isContains = function (map, pos) {
-            return (pos.row >= 0 && pos.row < map.length &&
-                pos.col >= 0 && pos.col < map[pos.row].length);
-        };
-        PathFinder.isExit = function (map, pos) {
-            return (pos.row === 0 || pos.row === map.length - 1 ||
-                pos.col === 0 || (map.length > pos.row && pos.col === map[pos.row].length - 1));
-        };
-        PathFinder.isEqual = function (origin, target) {
-            return (origin.row === target.row && origin.col === target.col);
-        };
-        PathFinder.DIRECTIONS = [
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1]
-        ];
-        return PathFinder;
-    }());
-    exports.PathFinder = PathFinder;
 });
