@@ -15,7 +15,7 @@ export class GameService implements Injectable {
     private readonly TURN_AROUND_MESSAGE = `Turn around...`;
     private readonly EXIT_MESSAGE = `Exit!`;
 
-    private readonly STEP_TIME = 100;
+    private readonly DEFAULT_STEP_TIME = 1000;
     private readonly DIRECTION_ANGLES = {
         [Direction.UP]:     0,
         [Direction.DOWN]:   180,
@@ -31,6 +31,7 @@ export class GameService implements Injectable {
         Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT
     ];
 
+    private readonly _speedControl: HTMLInputElement;
     private _controlsService: ControlsService = Injector.get(ControlsService) as ControlsService;
     private _loggerService: LoggerService = Injector.get(LoggerService) as LoggerService;
     private _mapService: MapEditService = Injector.get(MapEditService) as MapEditService;
@@ -42,6 +43,18 @@ export class GameService implements Injectable {
     private _timer?: number;
 
     constructor() {
+        this._speedControl = document.getElementById('speed-input') as HTMLInputElement;
+        this._speedControl.valueAsNumber = this.DEFAULT_STEP_TIME;
+        this._speedControl.addEventListener('blur', () => {
+
+            if (this._speedControl.valueAsNumber > this.DEFAULT_STEP_TIME) {
+                this._speedControl.valueAsNumber = this.DEFAULT_STEP_TIME;
+            }
+            if (this._speedControl.valueAsNumber < 0) {
+                this._speedControl.valueAsNumber = 0;
+            }
+        });
+
         this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
 
         this.stopGame();
@@ -138,7 +151,7 @@ export class GameService implements Injectable {
                 this.stopGame();
             }
 
-        }, this.STEP_TIME);
+        }, this._speedControl.valueAsNumber);
     }
 
     public stopGame(): void {

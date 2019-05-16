@@ -35,7 +35,7 @@ export class MapModel {
     private _exitPosition?: ExitPosition;
 
     public init(mapText: string | null): boolean {
-        if (!mapText) return false;
+        if (!mapText || mapText.length === 0) return false;
 
         this.clear();
 
@@ -47,35 +47,35 @@ export class MapModel {
 
                 maxRowLength = Math.max(maxRowLength, row.length);
 
-                row.split('')
-                    .forEach((sign: string, j: number) => {
-                        if (sign === this.WALL_SIGN) {
-                            this._map[i][j] = false;
-                        }
-                        else {
-                            this._map[i][j] = true;
+                if (row.length > 0) {
+                    row.split('')
+                        .forEach((sign: string, j: number) => {
+                            if (sign === this.WALL_SIGN) {
+                                this._map[i][j] = false;
+                            } else {
+                                this._map[i][j] = true;
 
-                            if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
-                                if (this._playerPosition) {
-                                    console.log('Warning: Player position duplication!');
+                                if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
+                                    if (this._playerPosition) {
+                                        console.log('Warning: Player position duplication!');
+                                    }
+                                    this._playerPosition = {
+                                        row: i,
+                                        col: j,
+                                        direction: this.DIRECTION_SIGNS[sign]
+                                    };
+                                } else if (sign === this.EXIT_SIGN) {
+                                    if (this._exitPosition) {
+                                        console.log('Warning: Exit position duplication!');
+                                    }
+                                    this._exitPosition = {
+                                        row: i,
+                                        col: j
+                                    };
                                 }
-                                this._playerPosition = {
-                                    row: i,
-                                    col: j,
-                                    direction: this.DIRECTION_SIGNS[sign]
-                                };
                             }
-                            else if (sign === this.EXIT_SIGN) {
-                                if (this._exitPosition) {
-                                    console.log('Warning: Exit position duplication!');
-                                }
-                                this._exitPosition = {
-                                    row: i,
-                                    col: j
-                                };
-                            }
-                        }
-                    });
+                        });
+                }
             });
 
         this._map.forEach((row: Array<boolean>) => {

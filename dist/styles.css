@@ -43,11 +43,11 @@ button[disabled] {
     width: 100%;
 }
 .game-map {
-    display: table-row;
+    /*display: table-row;*/
     height: 90%;
 }
 .game-settings {
-    display: table-row;
+    /*display: table-row;*/
     height: 10%;
 }
 .grid {
@@ -65,6 +65,10 @@ button[disabled] {
 .grid-wall {
     background-color: dimgrey;
 }
+.speed {
+    float: left;
+    margin-left: 20%;
+}
 #log-area, #edit-area {
     width: 100%;
     margin-top: 2%;
@@ -78,4 +82,7 @@ button[disabled] {
     letter-spacing: 5px;
     font-weight: bold;
     font-size: 25px;
+}
+#speed-input {
+    width: 50px;
 }

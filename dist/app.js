@@ -114,7 +114,7 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
         }
         MapModel.prototype.init = function (mapText) {
             var _this = this;
-            if (!mapText)
+            if (!mapText || mapText.length === 0)
                 return false;
             this.clear();
             var maxRowLength = 0;
@@ -122,34 +122,36 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
                 .forEach(function (row, i) {
                 _this._map[i] = new Array();
                 maxRowLength = Math.max(maxRowLength, row.length);
-                row.split('')
-                    .forEach(function (sign, j) {
-                    if (sign === _this.WALL_SIGN) {
-                        _this._map[i][j] = false;
-                    }
-                    else {
-                        _this._map[i][j] = true;
-                        if (_this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
-                            if (_this._playerPosition) {
-                                console.log('Warning: Player position duplication!');
-                            }
-                            _this._playerPosition = {
-                                row: i,
-                                col: j,
-                                direction: _this.DIRECTION_SIGNS[sign]
-                            };
+                if (row.length > 0) {
+                    row.split('')
+                        .forEach(function (sign, j) {
+                        if (sign === _this.WALL_SIGN) {
+                            _this._map[i][j] = false;
                         }
-                        else if (sign === _this.EXIT_SIGN) {
-                            if (_this._exitPosition) {
-                                console.log('Warning: Exit position duplication!');
+                        else {
+                            _this._map[i][j] = true;
+                            if (_this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
+                                if (_this._playerPosition) {
+                                    console.log('Warning: Player position duplication!');
+                                }
+                                _this._playerPosition = {
+                                    row: i,
+                                    col: j,
+                                    direction: _this.DIRECTION_SIGNS[sign]
+                                };
                             }
-                            _this._exitPosition = {
-                                row: i,
-                                col: j
-                            };
+                            else if (sign === _this.EXIT_SIGN) {
+                                if (_this._exitPosition) {
+                                    console.log('Warning: Exit position duplication!');
+                                }
+                                _this._exitPosition = {
+                                    row: i,
+                                    col: j
+                                };
+                            }
                         }
-                    }
-                });
+                    });
+                }
             });
             this._map.forEach(function (row) {
                 while (row.length < maxRowLength) {
@@ -338,7 +340,7 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
     var MapView = /** @class */ (function () {
         function MapView() {
             var _a;
-            this.CELL_SIZE = 20;
+            this.MAX_CELL_SIZE = 50;
             this.STEPS_IMG = 'images/steps.png';
             this.ARROW_IMG = 'images/arrow.png';
             this.DIRECTION_TRANSFORMS = (_a = {},
@@ -348,11 +350,16 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
                 _a[map_model_1.Direction.RIGHT] = 'transform: rotate(90deg)',
                 _a);
             this._mapGrid = [];
+            this._size = 0;
             this._mapArea = document.getElementById('map-area');
         }
         MapView.prototype.buildMap = function (map, playerPos) {
             var _this = this;
+            if (!map || map.length === 0) {
+                return;
+            }
             this.clear();
+            this._size = Math.min(Math.floor(window.innerWidth / map[0].length / 2), this.MAX_CELL_SIZE);
             map.forEach(function (row, i) {
                 var rowDiv = document.createElement('div');
                 rowDiv.className = 'grid-row';
@@ -360,15 +367,15 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
                 row.forEach(function (isEmpty, j) {
                     var cellDiv = document.createElement('div');
                     cellDiv.className = "grid-cell " + (!isEmpty ? 'grid-wall' : '');
-                    cellDiv.style.width = _this.CELL_SIZE + "px";
-                    cellDiv.style.height = _this.CELL_SIZE + "px";
+                    cellDiv.style.width = _this._size + "px";
+                    cellDiv.style.height = _this._size + "px";
                     rowDiv.appendChild(cellDiv);
                     _this._mapGrid[i][j] = cellDiv;
                 });
                 _this._mapArea.appendChild(rowDiv);
             });
             this.movePlayer(playerPos, false);
-            this._mapArea.style.width = map.length ? (map[0].length) * this.CELL_SIZE + 'px' : '0px';
+            this._mapArea.style.width = map.length ? (map[0].length) * this._size + 'px' : '0px';
         };
         MapView.prototype.clear = function () {
             this._mapGrid = new Array();
@@ -389,7 +396,7 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
             if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
                 cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
                 if (leaveStep)
-                    cell.innerHTML = "<img src=\"" + this.STEPS_IMG + "\" width=\"" + this.CELL_SIZE + "\" height=\"" + this.CELL_SIZE + "\" style=\"opacity: 0.5; " + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
+                    cell.innerHTML = "<img src=\"" + this.STEPS_IMG + "\" width=\"" + this._size + "\" height=\"" + this._size + "\" style=\"opacity: 0.5; " + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
                 else
                     cell.innerHTML = '';
             }
@@ -399,7 +406,7 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
                 direction: playerPos.direction
             };
             cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-            cell.innerHTML = "<img src=\"" + this.ARROW_IMG + "\" width=\"" + this.CELL_SIZE + "\" height=\"" + this.CELL_SIZE + "\" style=\"" + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
+            cell.innerHTML = "<img src=\"" + this.ARROW_IMG + "\" width=\"" + this._size + "\" height=\"" + this._size + "\" style=\"" + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
         };
         return MapView;
     }());
@@ -521,6 +528,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
     Object.defineProperty(exports, "__esModule", { value: true });
     var GameService = /** @class */ (function () {
         function GameService() {
+            var _this = this;
             var _a;
             this.GAME_BEGIN_MESSAGE = 'Game begins!';
             this.AMOUNT_PLACEHOLDER = '{amount}';
@@ -529,7 +537,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this.TURN_RIGHT_MESSAGE = "Turn left...";
             this.TURN_AROUND_MESSAGE = "Turn around...";
             this.EXIT_MESSAGE = "Exit!";
-            this.STEP_TIME = 100;
+            this.DEFAULT_STEP_TIME = 1000;
             this.DIRECTION_ANGLES = (_a = {},
                 _a[map_model_3.Direction.UP] = 0,
                 _a[map_model_3.Direction.DOWN] = 180,
@@ -549,6 +557,16 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this._mapService = injector_util_2.Injector.get(map_edit_service_1.MapEditService);
             this._mapView = injector_util_2.Injector.get(map_view_2.MapView);
             this._path = [];
+            this._speedControl = document.getElementById('speed-input');
+            this._speedControl.valueAsNumber = this.DEFAULT_STEP_TIME;
+            this._speedControl.addEventListener('blur', function () {
+                if (_this._speedControl.valueAsNumber > _this.DEFAULT_STEP_TIME) {
+                    _this._speedControl.valueAsNumber = _this.DEFAULT_STEP_TIME;
+                }
+                if (_this._speedControl.valueAsNumber < 0) {
+                    _this._speedControl.valueAsNumber = 0;
+                }
+            });
             this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
             this.stopGame();
         }
@@ -623,7 +641,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                     _this._loggerService.log(_this.EXIT_MESSAGE);
                     _this.stopGame();
                 }
-            }, this.STEP_TIME);
+            }, this._speedControl.valueAsNumber);
         };
         GameService.prototype.stopGame = function () {
             this.togglePlayMode(false);

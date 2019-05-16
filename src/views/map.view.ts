@@ -2,7 +2,7 @@ import {Injectable} from "../utils/injector.util";
 import {Direction, PlayerPosition} from "../models/map.model";
 
 export class MapView implements Injectable{
-    private readonly CELL_SIZE = 20;
+    private readonly MAX_CELL_SIZE = 50;
     private readonly STEPS_IMG = 'images/steps.png';
     private readonly ARROW_IMG = 'images/arrow.png';
     private readonly DIRECTION_TRANSFORMS = {
@@ -15,13 +15,23 @@ export class MapView implements Injectable{
     private readonly _mapArea: HTMLDivElement;
     private _mapGrid: Array<Array<HTMLDivElement>> = [];
     private _playerPosition?: PlayerPosition;
+    private _size = 0;
 
     constructor() {
         this._mapArea = document.getElementById('map-area') as HTMLDivElement;
     }
 
     public buildMap(map: Array<Array<boolean>>, playerPos: PlayerPosition): void {
+        if (!map || map.length === 0) {
+            return;
+        }
+
         this.clear();
+
+        this._size = Math.min(
+            Math.floor(window.innerWidth / map[0].length / 2),
+            this.MAX_CELL_SIZE
+        );
 
         map.forEach((row: Array<boolean>, i: number) => {
 
@@ -33,8 +43,8 @@ export class MapView implements Injectable{
             row.forEach((isEmpty: boolean, j: number) => {
                 let cellDiv = <HTMLDivElement>document.createElement('div');
                 cellDiv.className = `grid-cell ${!isEmpty ? 'grid-wall' : ''}`;
-                cellDiv.style.width = `${this.CELL_SIZE}px`;
-                cellDiv.style.height = `${this.CELL_SIZE}px`;
+                cellDiv.style.width = `${this._size}px`;
+                cellDiv.style.height = `${this._size}px`;
 
                 rowDiv.appendChild(cellDiv);
 
@@ -45,7 +55,7 @@ export class MapView implements Injectable{
 
         this.movePlayer(playerPos, false);
 
-        this._mapArea.style.width = map.length ? (map[0].length) * this.CELL_SIZE + 'px' : '0px';
+        this._mapArea.style.width = map.length ? (map[0].length) * this._size + 'px' : '0px';
     }
 
     public clear(): void {
@@ -69,7 +79,7 @@ export class MapView implements Injectable{
         if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
             cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
             if (leaveStep)
-                cell.innerHTML = `<img src="${this.STEPS_IMG}" width="${this.CELL_SIZE}" height="${this.CELL_SIZE}" style="opacity: 0.5; ${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
+                cell.innerHTML = `<img src="${this.STEPS_IMG}" width="${this._size}" height="${this._size}" style="opacity: 0.5; ${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
             else
                 cell.innerHTML = '';
         }
@@ -81,6 +91,6 @@ export class MapView implements Injectable{
         };
 
         cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-        cell.innerHTML = `<img src="${this.ARROW_IMG}" width="${this.CELL_SIZE}" height="${this.CELL_SIZE}" style="${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
+        cell.innerHTML = `<img src="${this.ARROW_IMG}" width="${this._size}" height="${this._size}" style="${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
     }
 }
