@@ -50,7 +50,21 @@ button[disabled] {
     display: table-row;
     height: 10%;
 }
+.grid {
+    text-align: center;
+    display: inline-block;
+}
+.grid-row {
 
+}
+.grid-cell {
+    border: 1px solid #ccc;
+    border-width: 0 1px 1px 0;
+    float: left;
+}
+.grid-wall {
+    background-color: dimgrey;
+}
 #log-area, #edit-area {
     width: 100%;
     margin-top: 2%;
@@ -59,7 +73,6 @@ button[disabled] {
     /*border: none !important;*/
     /*overflow: hidden;*/
 }
-
 #edit-area {
     line-height: 90%;
     letter-spacing: 5px;

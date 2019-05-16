@@ -1,7 +1,4 @@
-export interface Cell {
-    col: number,
-    row: number
-}
+import {Cell, isContains, isEqual, isExit} from "./utils";
 
 export class PathFinder {
 
@@ -35,12 +32,12 @@ export class PathFinder {
                     row: currentPos.row + direction[0],
                     col: currentPos.col + direction[1]
                 };
-                if (this.isContains(pathMap, targetPos) && pathMap[targetPos.row][targetPos.col] === true) {
+                if (isContains(pathMap, targetPos) && pathMap[targetPos.row][targetPos.col] === true) {
                     pathMap[targetPos.row][targetPos.col] = <number>pathMap[currentPos.row][currentPos.col] + 1;
                     nextSteps.push(targetPos);
 
-                    if ((endPos && this.isEqual(targetPos, endPos)) ||
-                        (!endPos && this.isExit(pathMap, targetPos))) {
+                    if ((endPos && isEqual(targetPos, endPos)) ||
+                        (!endPos && isExit(pathMap, targetPos))) {
 
                         endPos = targetPos;
                         pathFound = true;
@@ -76,11 +73,11 @@ export class PathFinder {
         const result = new Array<Cell>();
 
         while (true) {
-            result.push(currentPos);
-
-            if (this.isEqual(currentPos, startPos)) {
+            if (isEqual(currentPos, startPos)) {
                 break;
             }
+
+            result.unshift(currentPos);
 
             this.DIRECTIONS.forEach((direction: [number, number]) => {
                 targetPos = {
@@ -88,7 +85,7 @@ export class PathFinder {
                     col: currentPos.col + direction[1]
                 };
 
-                if (this.isContains(pathMap, targetPos)) {
+                if (isContains(pathMap, targetPos)) {
                     let value = pathMap[targetPos.row][targetPos.col];
                     if (typeof value === "number" && <number>value < pathMap[currentPos.row][currentPos.col]) {
                         currentPos = targetPos;
@@ -101,19 +98,5 @@ export class PathFinder {
         pathMap.length = 0;
 
         return result;
-    }
-
-    private static isContains(map: Array<Array<boolean | number>>, pos: Cell): boolean {
-        return (pos.row >= 0 && pos.row < map.length &&
-            pos.col >= 0 && pos.col < map[pos.row].length);
-    }
-
-    private static isExit(map: Array<Array<boolean | number>>, pos: Cell): boolean {
-        return (pos.row === 0 || pos.row === map.length - 1 ||
-            pos.col === 0 || (map.length > pos.row && pos.col === map[pos.row].length - 1));
-    }
-
-    private static isEqual(origin: Cell, target: Cell): boolean {
-        return (origin.row === target.row && origin.col === target.col);
     }
 }

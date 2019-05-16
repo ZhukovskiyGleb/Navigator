@@ -7,8 +7,7 @@ export enum EditStates {
 
 export enum StartStates {
     PLAY = 'Play',
-    STOP = 'Stop',
-    PAUSE = 'Pause'
+    STOP = 'Stop'
 }
 
 export class ControlsService implements Injectable{

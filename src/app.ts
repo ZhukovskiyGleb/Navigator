@@ -8,9 +8,9 @@ import {Injector} from "./utils/injector.util";
 class Main {
     constructor() {
         Injector.inject(ControlsService);
+        Injector.inject(MapView);
         Injector.inject(MapEditService);
         Injector.inject(LoggerService);
-        Injector.inject(MapView);
         Injector.inject(GameService);
     }
 

@@ -1,5 +1,3 @@
-import {Cell, PathFinder} from "../utils/path-finder.util";
-
 export enum Direction {
     UP = 1,
     DOWN = 2,
@@ -22,7 +20,7 @@ export class MapModel {
     private readonly WALL_SIGN = '#';
     private readonly EXIT_SIGN = '@';
     private readonly UP_SIGN = '^';
-    private readonly DOWN_SIGN = '_';
+    private readonly DOWN_SIGN = 'v';
     private readonly LEFT_SIGN = '<';
     private readonly RIGHT_SIGN = '>';
     private readonly DIRECTION_SIGNS : {[key: string]: Direction} = {
@@ -35,7 +33,6 @@ export class MapModel {
     private _map: Array<Array<boolean>> = [];
     private _playerPosition?: PlayerPosition;
     private _exitPosition?: ExitPosition;
-    private _path?: Array<Cell>;
 
     public init(mapText: string | null): boolean {
         if (!mapText) return false;
@@ -86,22 +83,6 @@ export class MapModel {
             console.log(`Warning: Exit position [${this.EXIT_SIGN}] not found!`);
         }
 
-        this._path = PathFinder.find(
-            this._map,
-            {
-                row: this._playerPosition.row,
-                col: this._playerPosition.col
-            },
-            this._exitPosition ? {
-                row: this._exitPosition.row,
-                col: this._exitPosition.col
-            } : undefined);
-
-        if (this._path.length === 0) {
-            console.log('Error: Path not found!');
-            return false;
-        }
-
         return true;
     }
 
@@ -141,9 +122,5 @@ export class MapModel {
 
     public get width(): number {
         return this._map && this._map[0] ? this._map[0].length : 0;
-    }
-
-    public get path():Array<Cell> {
-        return this._path || [];
     }
 }
