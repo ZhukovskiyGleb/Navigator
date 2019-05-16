@@ -1,3 +1,5 @@
+import {Injectable} from "../utils/injector.util";
+
 export enum EditStates {
     EDIT = 'Edit',
     SAVE = 'Save'
@@ -9,7 +11,7 @@ export enum StartStates {
     PAUSE = 'Pause'
 }
 
-export class ControlsService {
+export class ControlsService implements Injectable{
     private readonly _editButton: HTMLButtonElement;
     private readonly _startButton: HTMLButtonElement;
 

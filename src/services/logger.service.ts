@@ -1,4 +1,6 @@
-export class LoggerService {
+import {Injectable} from "../utils/injector.util";
+
+export class LoggerService implements Injectable{
     private readonly _logArea: HTMLTextAreaElement;
 
     constructor() {

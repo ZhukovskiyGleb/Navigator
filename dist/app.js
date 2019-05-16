@@ -9,6 +9,28 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+define("utils/injector.util", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Injector = /** @class */ (function () {
+        function Injector() {
+        }
+        Injector.inject = function (ref) {
+            var name = ref.toString();
+            if (this._injects.hasOwnProperty(name)) {
+                console.log("Error: Inject " + name + " already exist!");
+                return;
+            }
+            this._injects[name] = new ref();
+        };
+        Injector.get = function (ref) {
+            return this._injects[ref.toString()] || null;
+        };
+        Injector._injects = {};
+        return Injector;
+    }());
+    exports.Injector = Injector;
+});
 define("services/controls.service", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -315,13 +337,13 @@ define("models/map.model", ["require", "exports", "utils/path-finder.util"], fun
     }());
     exports.MapModel = MapModel;
 });
-define("services/map-edit.service", ["require", "exports", "services/controls.service", "models/map.model"], function (require, exports, controls_service_1, map_model_1) {
+define("services/map-edit.service", ["require", "exports", "services/controls.service", "models/map.model", "utils/injector.util"], function (require, exports, controls_service_1, map_model_1, injector_util_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var MapEditService = /** @class */ (function () {
-        function MapEditService(_controlsService) {
-            this._controlsService = _controlsService;
+        function MapEditService() {
             this.DEFAULT_MAP = '#######\n#   #>#\n#   # #\n# # # #\n# #   #\n# #####';
+            this._controlsService = injector_util_1.Injector.get(controls_service_1.ControlsService);
             this._map = new map_model_1.MapModel();
             this._gameTab = document.getElementById('game-tab');
             this._editTab = document.getElementById('edit-tab');
@@ -387,15 +409,32 @@ define("services/logger.service", ["require", "exports"], function (require, exp
     }());
     exports.LoggerService = LoggerService;
 });
-define("services/game.service", ["require", "exports", "services/controls.service"], function (require, exports, controls_service_2) {
+define("views/map.view", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var MapView = /** @class */ (function () {
+        function MapView() {
+            this._mapArea = document.getElementById('map-area');
+        }
+        MapView.prototype.buildMap = function (map) {
+        };
+        MapView.prototype.clear = function () {
+            this._mapArea.innerHTML = '';
+        };
+        return MapView;
+    }());
+    exports.MapView = MapView;
+});
+define("services/game.service", ["require", "exports", "services/controls.service", "services/logger.service", "services/map-edit.service", "utils/injector.util", "views/map.view"], function (require, exports, controls_service_2, logger_service_1, map_edit_service_1, injector_util_2, map_view_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var GameService = /** @class */ (function () {
-        function GameService(_controlsService, _loggerService, _mapService) {
-            this._controlsService = _controlsService;
-            this._loggerService = _loggerService;
-            this._mapService = _mapService;
+        function GameService() {
             this.STEP_TIME = 1000;
+            this._controlsService = injector_util_2.Injector.get(controls_service_2.ControlsService);
+            this._loggerService = injector_util_2.Injector.get(logger_service_1.LoggerService);
+            this._mapService = injector_util_2.Injector.get(map_edit_service_1.MapEditService);
+            this._mapView = injector_util_2.Injector.get(map_view_1.MapView);
             this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
             this.togglePlayMode(false);
         }
@@ -436,15 +475,16 @@ define("services/game.service", ["require", "exports", "services/controls.servic
     }());
     exports.GameService = GameService;
 });
-define("app", ["require", "exports", "services/controls.service", "services/map-edit.service", "services/logger.service", "services/game.service"], function (require, exports, controls_service_3, map_edit_service_1, logger_service_1, game_service_1) {
+define("app", ["require", "exports", "services/controls.service", "services/map-edit.service", "services/logger.service", "services/game.service", "views/map.view", "utils/injector.util"], function (require, exports, controls_service_3, map_edit_service_2, logger_service_2, game_service_1, map_view_2, injector_util_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Main = /** @class */ (function () {
         function Main() {
-            this._controlsService = new controls_service_3.ControlsService();
-            this._mapEditService = new map_edit_service_1.MapEditService(this._controlsService);
-            this._logerService = new logger_service_1.LoggerService();
-            this._gameService = new game_service_1.GameService(this._controlsService, this._logerService, this._mapEditService);
+            injector_util_3.Injector.inject(controls_service_3.ControlsService);
+            injector_util_3.Injector.inject(map_edit_service_2.MapEditService);
+            injector_util_3.Injector.inject(logger_service_2.LoggerService);
+            injector_util_3.Injector.inject(map_view_2.MapView);
+            injector_util_3.Injector.inject(game_service_1.GameService);
         }
         Main.prototype.init = function () {
         };

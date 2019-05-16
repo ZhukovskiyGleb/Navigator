@@ -1,16 +1,21 @@
 import {ControlsService, StartStates} from "./controls.service";
 import {LoggerService} from "./logger.service";
 import {MapEditService} from "./map-edit.service";
+import {Injectable, Injector} from "../utils/injector.util";
+import {MapView} from "../views/map.view";
 
-export class GameService {
+export class GameService implements Injectable {
     private readonly STEP_TIME: number = 1000;
+
+    private _controlsService: ControlsService = Injector.get(ControlsService) as ControlsService;
+    private _loggerService: LoggerService = Injector.get(LoggerService) as LoggerService;
+    private _mapService: MapEditService = Injector.get(MapEditService) as MapEditService;
+    private _mapView: MapView = Injector.get(MapView) as MapView;
 
     private _isGameStarted?: boolean;
     private _timer?: number;
 
-    constructor(private _controlsService: ControlsService,
-                private _loggerService: LoggerService,
-                private _mapService: MapEditService) {
+    constructor() {
         this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
 
         this.togglePlayMode(false);

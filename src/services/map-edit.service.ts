@@ -1,18 +1,21 @@
 import {ControlsService, EditStates} from "./controls.service";
 import {MapModel} from "../models/map.model";
+import {Injectable, Injector} from "../utils/injector.util";
 
-export class MapEditService {
+export class MapEditService implements Injectable {
     private readonly DEFAULT_MAP = '#######\n#   #>#\n#   # #\n# # # #\n# #   #\n# #####';
 
     private readonly _gameTab: HTMLDivElement;
     private readonly _editTab: HTMLDivElement;
     private readonly _editArea: HTMLTextAreaElement;
 
+    private _controlsService: ControlsService = Injector.get(ControlsService) as ControlsService;
+
     private readonly _map: MapModel = new MapModel();
 
     private _inEditMode?:Boolean;
 
-    constructor(private _controlsService: ControlsService) {
+    constructor() {
         this._gameTab = document.getElementById('game-tab') as HTMLDivElement;
         this._editTab = document.getElementById('edit-tab') as HTMLDivElement;
         this._editArea = document.getElementById('edit-area') as HTMLTextAreaElement;
