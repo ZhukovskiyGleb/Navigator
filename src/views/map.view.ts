@@ -2,7 +2,8 @@ import {Injectable} from "../utils/injector.util";
 import {Direction, PlayerPosition} from "../models/map.model";
 
 export class MapView implements Injectable{
-    private readonly CELL_SIZE = 30;
+    private readonly CELL_SIZE = 20;
+    private readonly STEPS_IMG = 'images/steps.png';
     private readonly ARROW_IMG = 'images/arrow.png';
     private readonly DIRECTION_TRANSFORMS = {
         [Direction.UP]:     '',
@@ -42,9 +43,9 @@ export class MapView implements Injectable{
             this._mapArea.appendChild(rowDiv);
         });
 
-        this.movePlayer(playerPos);
+        this.movePlayer(playerPos, false);
 
-        this._mapArea.style.width = map.length ? (map[0].length + 1) * this.CELL_SIZE + 'px' : '0px';
+        this._mapArea.style.width = map.length ? (map[0].length) * this.CELL_SIZE + 'px' : '0px';
     }
 
     public clear(): void {
@@ -53,12 +54,24 @@ export class MapView implements Injectable{
         this._mapArea.innerHTML = '';
     }
 
-    public movePlayer(playerPos: PlayerPosition): void {
+    public updateMap(): void {
+        this._mapGrid.forEach((row: Array<HTMLDivElement>, i: number) => {
+            row.forEach((div: HTMLDivElement, j: number) => {
+                if (!this._playerPosition || this._playerPosition.row !== i || this._playerPosition.col !== j)
+                    div.innerHTML = '';
+            })
+        })
+    }
+
+    public movePlayer(playerPos: PlayerPosition, leaveStep: boolean = true): void {
         let cell: HTMLDivElement;
 
         if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
             cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-            cell.innerHTML = '';
+            if (leaveStep)
+                cell.innerHTML = `<img src="${this.STEPS_IMG}" width="${this.CELL_SIZE}" height="${this.CELL_SIZE}" style="opacity: 0.5; ${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
+            else
+                cell.innerHTML = '';
         }
 
         this._playerPosition = {

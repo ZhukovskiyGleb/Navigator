@@ -90,10 +90,10 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var Direction;
     (function (Direction) {
-        Direction[Direction["UP"] = 1] = "UP";
-        Direction[Direction["DOWN"] = 2] = "DOWN";
-        Direction[Direction["LEFT"] = 3] = "LEFT";
-        Direction[Direction["RIGHT"] = 4] = "RIGHT";
+        Direction["UP"] = "Up";
+        Direction["DOWN"] = "Down";
+        Direction["LEFT"] = "Left";
+        Direction["RIGHT"] = "Right";
     })(Direction = exports.Direction || (exports.Direction = {}));
     var MapModel = /** @class */ (function () {
         function MapModel() {
@@ -117,9 +117,11 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
             if (!mapText)
                 return false;
             this.clear();
+            var maxRowLength = 0;
             mapText.split('\n')
                 .forEach(function (row, i) {
                 _this._map[i] = new Array();
+                maxRowLength = Math.max(maxRowLength, row.length);
                 row.split('')
                     .forEach(function (sign, j) {
                     if (sign === _this.WALL_SIGN) {
@@ -148,6 +150,11 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
                         }
                     }
                 });
+            });
+            this._map.forEach(function (row) {
+                while (row.length < maxRowLength) {
+                    row.push(true);
+                }
             });
             if (!this._playerPosition) {
                 var keys = Object.keys(__assign({}, this.DIRECTION_SIGNS));
@@ -256,7 +263,7 @@ define("utils/path-finder.util", ["require", "exports", "utils/utils"], function
             pathMap[currentPos.row][currentPos.col] = 0;
             var pathFound = false;
             while (true) {
-                this.DIRECTIONS.forEach(function (direction) {
+                pathFound = this.DIRECTIONS.some(function (direction) {
                     targetPos = {
                         row: currentPos.row + direction[0],
                         col: currentPos.col + direction[1]
@@ -267,10 +274,10 @@ define("utils/path-finder.util", ["require", "exports", "utils/utils"], function
                         if ((endPos && utils_1.isEqual(targetPos, endPos)) ||
                             (!endPos && utils_1.isExit(pathMap, targetPos))) {
                             endPos = targetPos;
-                            pathFound = true;
-                            return;
+                            return true;
                         }
                     }
+                    return false;
                 });
                 if (pathFound || nextSteps.length === 0) {
                     break;
@@ -297,7 +304,7 @@ define("utils/path-finder.util", ["require", "exports", "utils/utils"], function
                     break;
                 }
                 result.unshift(currentPos);
-                this.DIRECTIONS.forEach(function (direction) {
+                this.DIRECTIONS.some(function (direction) {
                     targetPos = {
                         row: currentPos.row + direction[0],
                         col: currentPos.col + direction[1]
@@ -306,9 +313,10 @@ define("utils/path-finder.util", ["require", "exports", "utils/utils"], function
                         var value = pathMap[targetPos.row][targetPos.col];
                         if (typeof value === "number" && value < pathMap[currentPos.row][currentPos.col]) {
                             currentPos = targetPos;
-                            return;
+                            return true;
                         }
                     }
+                    return false;
                 });
             }
             pathMap.length = 0;
@@ -330,7 +338,8 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
     var MapView = /** @class */ (function () {
         function MapView() {
             var _a;
-            this.CELL_SIZE = 30;
+            this.CELL_SIZE = 20;
+            this.STEPS_IMG = 'images/steps.png';
             this.ARROW_IMG = 'images/arrow.png';
             this.DIRECTION_TRANSFORMS = (_a = {},
                 _a[map_model_1.Direction.UP] = '',
@@ -358,18 +367,31 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
                 });
                 _this._mapArea.appendChild(rowDiv);
             });
-            this.movePlayer(playerPos);
-            this._mapArea.style.width = map.length ? (map[0].length + 1) * this.CELL_SIZE + 'px' : '0px';
+            this.movePlayer(playerPos, false);
+            this._mapArea.style.width = map.length ? (map[0].length) * this.CELL_SIZE + 'px' : '0px';
         };
         MapView.prototype.clear = function () {
             this._mapGrid = new Array();
             this._mapArea.innerHTML = '';
         };
-        MapView.prototype.movePlayer = function (playerPos) {
+        MapView.prototype.updateMap = function () {
+            var _this = this;
+            this._mapGrid.forEach(function (row, i) {
+                row.forEach(function (div, j) {
+                    if (!_this._playerPosition || _this._playerPosition.row !== i || _this._playerPosition.col !== j)
+                        div.innerHTML = '';
+                });
+            });
+        };
+        MapView.prototype.movePlayer = function (playerPos, leaveStep) {
+            if (leaveStep === void 0) { leaveStep = true; }
             var cell;
             if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
                 cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-                cell.innerHTML = '';
+                if (leaveStep)
+                    cell.innerHTML = "<img src=\"" + this.STEPS_IMG + "\" width=\"" + this.CELL_SIZE + "\" height=\"" + this.CELL_SIZE + "\" style=\"opacity: 0.5; " + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
+                else
+                    cell.innerHTML = '';
             }
             this._playerPosition = {
                 row: playerPos.row,
@@ -388,7 +410,12 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
     Object.defineProperty(exports, "__esModule", { value: true });
     var MapEditService = /** @class */ (function () {
         function MapEditService() {
-            this.DEFAULT_MAP = '#######\n# # #>#\n#   # #\n# # # #\n# #   #\n# #####';
+            this.DEFAULT_MAP = '##### #\n' +
+                '# # # #\n' +
+                '#   # #\n' +
+                '# # # #\n' +
+                '#v#   #\n' +
+                '#######';
             this._controlsService = injector_util_1.Injector.get(controls_service_1.ControlsService);
             this._mapView = injector_util_1.Injector.get(map_view_1.MapView);
             this._map = new map_model_2.MapModel();
@@ -489,19 +516,34 @@ define("services/logger.service", ["require", "exports"], function (require, exp
     }());
     exports.LoggerService = LoggerService;
 });
-define("services/game.service", ["require", "exports", "services/controls.service", "services/logger.service", "services/map-edit.service", "utils/injector.util", "views/map.view", "models/map.model"], function (require, exports, controls_service_2, logger_service_1, map_edit_service_1, injector_util_2, map_view_2, map_model_3) {
+define("services/game.service", ["require", "exports", "services/controls.service", "services/logger.service", "services/map-edit.service", "utils/injector.util", "views/map.view", "models/map.model", "utils/utils"], function (require, exports, controls_service_2, logger_service_1, map_edit_service_1, injector_util_2, map_view_2, map_model_3, utils_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var GameService = /** @class */ (function () {
         function GameService() {
             var _a;
-            this.STEP_TIME = 1000;
+            this.GAME_BEGIN_MESSAGE = 'Game begins!';
+            this.AMOUNT_PLACEHOLDER = '{amount}';
+            this.MOVE_FORWARD_MESSAGE = "Move forward " + this.AMOUNT_PLACEHOLDER + " steps.";
+            this.TURN_LEFT_MESSAGE = "Turn left...";
+            this.TURN_RIGHT_MESSAGE = "Turn left...";
+            this.TURN_AROUND_MESSAGE = "Turn around...";
+            this.EXIT_MESSAGE = "Exit!";
+            this.STEP_TIME = 100;
             this.DIRECTION_ANGLES = (_a = {},
                 _a[map_model_3.Direction.UP] = 0,
                 _a[map_model_3.Direction.DOWN] = 180,
-                _a[map_model_3.Direction.LEFT] = 270,
+                _a[map_model_3.Direction.LEFT] = -90,
                 _a[map_model_3.Direction.RIGHT] = 90,
                 _a);
+            this.ANGLES_MAP = [
+                { angle: 180, power: 2, msg: this.TURN_AROUND_MESSAGE },
+                { angle: 90, power: 1, msg: this.TURN_RIGHT_MESSAGE },
+                { angle: -90, power: -1, msg: this.TURN_LEFT_MESSAGE }
+            ];
+            this.DIRECTION_SEQUENCE = [
+                map_model_3.Direction.UP, map_model_3.Direction.RIGHT, map_model_3.Direction.DOWN, map_model_3.Direction.LEFT
+            ];
             this._controlsService = injector_util_2.Injector.get(controls_service_2.ControlsService);
             this._loggerService = injector_util_2.Injector.get(logger_service_1.LoggerService);
             this._mapService = injector_util_2.Injector.get(map_edit_service_1.MapEditService);
@@ -519,10 +561,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             }
             this._isGameStarted = value;
             if (this._isGameStarted) {
-                this._loggerService.clear();
-                this._player = this._mapService.playerClone;
-                this._path = this._mapService.pathClone;
-                this._loggerService.log('Game begins!');
+                this.startGame();
                 this._controlsService.deactivateEditButton();
                 this._controlsService.switchStartState(controls_service_2.StartStates.STOP);
                 this.nextStep();
@@ -535,12 +574,114 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                 }
             }
         };
+        GameService.prototype.startGame = function () {
+            this._loggerService.clear();
+            this._mapView.updateMap();
+            this._player = this._mapService.playerClone;
+            this._mapView.movePlayer(this._player, false);
+            this._path = this._mapService.pathClone;
+            this._loggerService.log(this.GAME_BEGIN_MESSAGE);
+        };
         GameService.prototype.nextStep = function () {
+            var _this = this;
             this._timer = setTimeout(function () {
+                var targetCell;
+                if (_this._player) {
+                    var steps = 0;
+                    var targetAngle = 0;
+                    do {
+                        targetCell = _this._path[steps];
+                        targetAngle = _this.calculateAngle(targetCell);
+                        if (targetAngle === 0) {
+                            steps++;
+                        }
+                    } while (targetAngle === 0 && _this._path.length > steps);
+                    if (steps > 0) {
+                        targetCell = _this._path[steps - 1];
+                        _this._loggerService.log(_this.MOVE_FORWARD_MESSAGE.replace(_this.AMOUNT_PLACEHOLDER, steps.toString()));
+                        _this.switchPosition(targetCell);
+                    }
+                    else {
+                        _this._loggerService.log(_this.getTurnMessage(targetAngle));
+                        _this.switchDirection(targetAngle);
+                    }
+                    if (utils_2.isEqual(_this._player, targetCell)) {
+                        steps = Math.max(1, steps);
+                        while (steps > 0) {
+                            _this._mapView.movePlayer(__assign({}, _this._path[0], { direction: _this._player.direction }));
+                            _this._path.shift();
+                            steps--;
+                        }
+                    }
+                    else
+                        _this._mapView.movePlayer(_this._player);
+                }
+                if (_this._path.length > 0) {
+                    _this.nextStep();
+                }
+                else {
+                    _this._loggerService.log(_this.EXIT_MESSAGE);
+                    _this.stopGame();
+                }
             }, this.STEP_TIME);
         };
         GameService.prototype.stopGame = function () {
             this.togglePlayMode(false);
+        };
+        GameService.prototype.calculateAngle = function (targetPos) {
+            if (this._player) {
+                var row = targetPos.row - this._player.row;
+                var col = targetPos.col - this._player.col;
+                var angle = Math.atan2(row, col) * 180 / Math.PI + 90;
+                if (angle > 90) {
+                    angle -= 360;
+                }
+                angle -= this.DIRECTION_ANGLES[this._player.direction];
+                if (angle < -90) {
+                    angle += 360;
+                }
+                return angle;
+            }
+            return 0;
+        };
+        GameService.prototype.switchPosition = function (target) {
+            if (this._player) {
+                this._player.row = target.row;
+                this._player.col = target.col;
+            }
+        };
+        GameService.prototype.switchDirection = function (angle) {
+            if (this._player) {
+                var position = this.DIRECTION_SEQUENCE.indexOf(this._player.direction);
+                position = position + this.getTurnPower(angle);
+                if (position >= this.DIRECTION_SEQUENCE.length)
+                    position -= this.DIRECTION_SEQUENCE.length;
+                if (position < 0)
+                    position += this.DIRECTION_SEQUENCE.length;
+                this._player.direction = this.DIRECTION_SEQUENCE[position];
+            }
+        };
+        GameService.prototype.getTurnPower = function (angle) {
+            var power = 0;
+            this.ANGLES_MAP.some(function (value) {
+                if (angle >= value.angle) {
+                    power = value.power;
+                    return true;
+                }
+                return false;
+            });
+            return power;
+        };
+        GameService.prototype.getTurnMessage = function (angle) {
+            var result = 'Fail!';
+            this.ANGLES_MAP.some(function (value) {
+                if (angle >= value.angle) {
+                    result = value.msg;
+                    return true;
+                }
+                return false;
+            });
+            return result;
         };
         return GameService;
     }());

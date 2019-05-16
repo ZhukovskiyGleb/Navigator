@@ -27,7 +27,7 @@ export class PathFinder {
         let pathFound: boolean = false;
 
         while (true) {
-            this.DIRECTIONS.forEach((direction: [number, number]) => {
+            pathFound = this.DIRECTIONS.some((direction: [number, number]) => {
                 targetPos = {
                     row: currentPos.row + direction[0],
                     col: currentPos.col + direction[1]
@@ -40,10 +40,10 @@ export class PathFinder {
                         (!endPos && isExit(pathMap, targetPos))) {
 
                         endPos = targetPos;
-                        pathFound = true;
-                        return;
+                        return true;
                     }
                 }
+                return false;
             });
 
             if (pathFound || nextSteps.length === 0) {
@@ -79,7 +79,7 @@ export class PathFinder {
 
             result.unshift(currentPos);
 
-            this.DIRECTIONS.forEach((direction: [number, number]) => {
+            this.DIRECTIONS.some((direction: [number, number]) => {
                 targetPos = {
                     row: currentPos.row + direction[0],
                     col: currentPos.col + direction[1]
@@ -89,9 +89,10 @@ export class PathFinder {
                     let value = pathMap[targetPos.row][targetPos.col];
                     if (typeof value === "number" && <number>value < pathMap[currentPos.row][currentPos.col]) {
                         currentPos = targetPos;
-                        return;
+                        return true;
                     }
                 }
+                return false;
             });
         }
 

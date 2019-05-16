@@ -1,8 +1,8 @@
 export enum Direction {
-    UP = 1,
-    DOWN = 2,
-    LEFT = 3,
-    RIGHT = 4
+    UP = 'Up',
+    DOWN = 'Down',
+    LEFT = 'Left',
+    RIGHT = 'Right'
 }
 
 export interface PlayerPosition {
@@ -39,9 +39,13 @@ export class MapModel {
 
         this.clear();
 
+        let maxRowLength: number = 0;
+
         mapText.split('\n')
             .forEach((row: string, i: number) => {
                 this._map[i] = new Array<boolean>();
+
+                maxRowLength = Math.max(maxRowLength, row.length);
 
                 row.split('')
                     .forEach((sign: string, j: number) => {
@@ -73,6 +77,12 @@ export class MapModel {
                         }
                     });
             });
+
+        this._map.forEach((row: Array<boolean>) => {
+            while (row.length < maxRowLength) {
+                row.push(true);
+            }
+        });
 
         if (!this._playerPosition) {
             const keys = Object.keys({...this.DIRECTION_SIGNS});

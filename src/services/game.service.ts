@@ -7,13 +7,29 @@ import {Direction, PlayerPosition} from "../models/map.model";
 import {Cell, isEqual} from "../utils/utils";
 
 export class GameService implements Injectable {
-    private readonly STEP_TIME: number = 1000;
+    private readonly GAME_BEGIN_MESSAGE = 'Game begins!';
+    private readonly AMOUNT_PLACEHOLDER = '{amount}';
+    private readonly MOVE_FORWARD_MESSAGE = `Move forward ${this.AMOUNT_PLACEHOLDER} steps.`;
+    private readonly TURN_LEFT_MESSAGE = `Turn left...`;
+    private readonly TURN_RIGHT_MESSAGE = `Turn left...`;
+    private readonly TURN_AROUND_MESSAGE = `Turn around...`;
+    private readonly EXIT_MESSAGE = `Exit!`;
+
+    private readonly STEP_TIME = 100;
     private readonly DIRECTION_ANGLES = {
         [Direction.UP]:     0,
         [Direction.DOWN]:   180,
-        [Direction.LEFT]:   270,
+        [Direction.LEFT]:   -90,
         [Direction.RIGHT]:  90
     };
+    private readonly ANGLES_MAP: Array<{angle: number, power: number, msg: string}> = [
+        {angle: 180, power: 2, msg: this.TURN_AROUND_MESSAGE},
+        {angle: 90, power: 1, msg: this.TURN_RIGHT_MESSAGE},
+        {angle: -90, power: -1, msg: this.TURN_LEFT_MESSAGE}
+    ];
+    private readonly DIRECTION_SEQUENCE = [
+        Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT
+    ];
 
     private _controlsService: ControlsService = Injector.get(ControlsService) as ControlsService;
     private _loggerService: LoggerService = Injector.get(LoggerService) as LoggerService;
@@ -43,11 +59,7 @@ export class GameService implements Injectable {
         this._isGameStarted = value;
 
         if (this._isGameStarted) {
-            this._loggerService.clear();
-            this._player = this._mapService.playerClone;
-            this._path = this._mapService.pathClone;
-
-            this._loggerService.log('Game begins!');
+            this.startGame();
 
             this._controlsService.deactivateEditButton();
             this._controlsService.switchStartState(StartStates.STOP);
@@ -64,16 +76,140 @@ export class GameService implements Injectable {
         }
     }
 
+    private startGame(): void {
+        this._loggerService.clear();
+        this._mapView.updateMap();
+
+        this._player = this._mapService.playerClone;
+        this._mapView.movePlayer(this._player, false);
+
+        this._path = this._mapService.pathClone;
+
+        this._loggerService.log(this.GAME_BEGIN_MESSAGE);
+    }
+
     private nextStep(): void {
         this._timer = setTimeout(() => {
 
+            let targetCell: Cell;
 
+            if (this._player) {
+                let steps = 0;
+                let targetAngle = 0;
+                do {
+                    targetCell = this._path[steps];
+                    targetAngle = this.calculateAngle(targetCell);
+                    if (targetAngle === 0) {
+                        steps ++;
+                    }
+                } while (targetAngle === 0 && this._path.length > steps);
+
+                if (steps > 0) {
+                    targetCell = this._path[steps - 1];
+
+                    this._loggerService.log(this.MOVE_FORWARD_MESSAGE.replace(this.AMOUNT_PLACEHOLDER, steps.toString()));
+                    this.switchPosition(targetCell);
+                }
+                else {
+                    this._loggerService.log(this.getTurnMessage(targetAngle));
+                    this.switchDirection(targetAngle);
+                }
+
+                if (isEqual(this._player, targetCell)) {
+                    steps = Math.max(1, steps);
+                    while (steps > 0) {
+                        this._mapView.movePlayer({
+                            ...this._path[0],
+                            direction: this._player.direction
+                        });
+                        this._path.shift();
+                        steps --;
+                    }
+                }
+                else
+                    this._mapView.movePlayer(this._player);
+            }
+
+            if (this._path.length > 0) {
+                this.nextStep();
+            }
+            else {
+                this._loggerService.log(this.EXIT_MESSAGE);
+                this.stopGame();
+            }
 
         }, this.STEP_TIME);
     }
 
     public stopGame(): void {
         this.togglePlayMode(false);
+    }
+
+    private calculateAngle(targetPos: Cell): number {
+        if (this._player) {
+            const row = targetPos.row - this._player.row;
+            const col = targetPos.col - this._player.col;
+            let angle = Math.atan2(row, col) * 180 / Math.PI + 90;
+
+            if (angle > 90) {
+                angle -= 360;
+            }
+
+            angle -= this.DIRECTION_ANGLES[this._player.direction];
+
+            if (angle < -90) {
+                angle += 360;
+            }
+
+            return angle;
+        }
+        return 0;
+    }
+
+    private switchPosition(target: Cell): void {
+        if (this._player) {
+            this._player.row = target.row;
+            this._player.col = target.col;
+        }
+    }
+
+    private switchDirection(angle: number): void {
+        if (this._player) {
+            let position = this.DIRECTION_SEQUENCE.indexOf(this._player.direction);
+            position = position + this.getTurnPower(angle);
+
+            if (position >= this.DIRECTION_SEQUENCE.length)
+                position -= this.DIRECTION_SEQUENCE.length;
+
+            if (position < 0)
+                position += this.DIRECTION_SEQUENCE.length;
+
+            this._player.direction = this.DIRECTION_SEQUENCE[position];
+        }
+    }
+
+    private getTurnPower(angle: number): number {
+        let power = 0;
+        this.ANGLES_MAP.some((value: {angle: number, power: number}) => {
+            if (angle >= value.angle) {
+                power = value.power;
+                return true;
+            }
+            return false;
+        });
+        return power;
+    }
+
+    private getTurnMessage(angle: number): string {
+        let result = 'Fail!';
+        this.ANGLES_MAP.some((value: {angle: number, msg: string}) => {
+            if (angle >= value.angle) {
+                result = value.msg;
+                return true;
+            }
+            return false;
+        });
+        return result;
     }
 
 

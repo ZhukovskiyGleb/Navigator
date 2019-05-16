@@ -6,7 +6,12 @@ import {MapView} from "../views/map.view";
 import {Cell} from "../utils/utils";
 
 export class MapEditService implements Injectable {
-    private readonly DEFAULT_MAP = '#######\n# # #>#\n#   # #\n# # # #\n# #   #\n# #####';
+    private readonly DEFAULT_MAP =  '##### #\n' +
+                                    '# # # #\n' +
+                                    '#   # #\n' +
+                                    '# # # #\n' +
+                                    '#v#   #\n' +
+                                    '#######';
 
     private readonly _gameTab: HTMLDivElement;
     private readonly _editTab: HTMLDivElement;
