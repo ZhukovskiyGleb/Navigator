@@ -43,11 +43,11 @@ button[disabled] {
     width: 100%;
 }
 .game-map {
-    /*display: table-row;*/
+    display: table-row;
     height: 90%;
 }
 .game-settings {
-    /*display: table-row;*/
+    display: table-row;
     height: 10%;
 }
 .grid {
