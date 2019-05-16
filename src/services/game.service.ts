@@ -11,7 +11,7 @@ export class GameService implements Injectable {
     private readonly AMOUNT_PLACEHOLDER = '{amount}';
     private readonly MOVE_FORWARD_MESSAGE = `Move forward ${this.AMOUNT_PLACEHOLDER} steps.`;
     private readonly TURN_LEFT_MESSAGE = `Turn left...`;
-    private readonly TURN_RIGHT_MESSAGE = `Turn left...`;
+    private readonly TURN_RIGHT_MESSAGE = `Turn right...`;
     private readonly TURN_AROUND_MESSAGE = `Turn around...`;
     private readonly EXIT_MESSAGE = `Exit!`;
 

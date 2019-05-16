@@ -58,8 +58,6 @@ button[disabled] {
 
 }
 .grid-cell {
-    /*border: 0px solid #ccc;*/
-    /*border-width: 0 0 0 0;*/
     float: left;
 }
 .grid-wall {
@@ -74,8 +72,6 @@ button[disabled] {
     margin-top: 2%;
     resize: vertical;
     min-height: 20rem;
-    /*border: none !important;*/
-    /*overflow: hidden;*/
 }
 #edit-area {
     line-height: 90%;

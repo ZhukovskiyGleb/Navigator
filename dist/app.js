@@ -534,7 +534,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this.AMOUNT_PLACEHOLDER = '{amount}';
             this.MOVE_FORWARD_MESSAGE = "Move forward " + this.AMOUNT_PLACEHOLDER + " steps.";
             this.TURN_LEFT_MESSAGE = "Turn left...";
-            this.TURN_RIGHT_MESSAGE = "Turn left...";
+            this.TURN_RIGHT_MESSAGE = "Turn right...";
             this.TURN_AROUND_MESSAGE = "Turn around...";
             this.EXIT_MESSAGE = "Exit!";
             this.DEFAULT_STEP_TIME = 1000;
