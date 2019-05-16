@@ -15,6 +15,7 @@ export class MapEditService implements Injectable {
 
     private readonly _gameTab: HTMLDivElement;
     private readonly _editTab: HTMLDivElement;
+    private readonly _speedControl: HTMLDivElement;
     private readonly _editArea: HTMLTextAreaElement;
 
     private _controlsService: ControlsService = Injector.get(ControlsService) as ControlsService;
@@ -28,15 +29,42 @@ export class MapEditService implements Injectable {
     constructor() {
         this._gameTab = document.getElementById('game-tab') as HTMLDivElement;
         this._editTab = document.getElementById('edit-tab') as HTMLDivElement;
+        this._speedControl = document.getElementById('speed-control') as HTMLDivElement;
         this._editArea = document.getElementById('edit-area') as HTMLTextAreaElement;
+
+        this._editArea.addEventListener('paste', this.updateEditAreaSize.bind(this));
+        this._editArea.addEventListener('keyup', this.updateEditAreaSize.bind(this));
+        window.addEventListener('resize', this.updateEditAreaSize.bind(this));
 
         this.loadDefaultMap();
 
         this._controlsService.subscribeEditClick(this.onEditClick.bind(this));
     }
 
+    private updateEditAreaSize(): void {
+        if (!this._editArea.value || this._editArea.value.length === 0) {
+            return;
+        }
+
+        const sizes = this._editArea.value.split('\n');
+        const h = sizes.length;
+        const w = sizes.reduce(
+            (max: number, row: string) => {
+                return Math.max(max, row.length);
+            }, 0
+        );
+
+        const size = Math.min(
+            Math.floor(this._editArea.offsetWidth / w),
+            Math.floor(this._editArea.offsetHeight / h),
+        );
+
+        this._editArea.style.fontSize = size + 'px';
+    }
+
     private loadDefaultMap(): void {
         this._editArea.textContent = this.DEFAULT_MAP;
+
         this.toggleEditMode(false);
     }
 
@@ -55,12 +83,16 @@ export class MapEditService implements Injectable {
             this._controlsService.deactivateStartButton();
             this._controlsService.switchEditState(EditStates.SAVE);
             this._gameTab.style.display = 'none';
+            this._speedControl.style.display = 'none';
             this._editTab.style.display = 'block';
+
+            this.updateEditAreaSize();
         } else {
             if (this._map.init(this._editArea.value) && this.findPath()) {
                 this._controlsService.activateStartButton();
                 this._controlsService.switchEditState(EditStates.EDIT);
                 this._gameTab.style.display = 'block';
+                this._speedControl.style.display = 'block';
                 this._editTab.style.display = 'none';
 
                 this._mapView.buildMap(this._map.content, this._map.player);

@@ -79,7 +79,7 @@ export class MapView implements Injectable{
         if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
             cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
             if (leaveStep)
-                cell.innerHTML = `<img src="${this.STEPS_IMG}" width="${this._size}" height="${this._size}" style="opacity: 0.5; ${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
+                cell.innerHTML = this.getImage(this.STEPS_IMG, .5);
             else
                 cell.innerHTML = '';
         }
@@ -91,6 +91,16 @@ export class MapView implements Injectable{
         };
 
         cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-        cell.innerHTML = `<img src="${this.ARROW_IMG}" width="${this._size}" height="${this._size}" style="${this.DIRECTION_TRANSFORMS[this._playerPosition.direction]}">`;
+        cell.innerHTML = this.getImage(this.ARROW_IMG);
+    }
+
+    private getImage(path: string, opacity: number = 1): string {
+        return `<img src="${path}" 
+                width="${this._size}" height="${this._size}" 
+                style="opacity: opacity; ${
+                    this._playerPosition ?
+                    this.DIRECTION_TRANSFORMS[this._playerPosition.direction] 
+                    : ''
+                }">`;
     }
 }

@@ -20,10 +20,13 @@
                         </div>
                         <div id="edit-tab" style="display: none">
                             <textarea id="edit-area"></textarea>
+                            <div class="tips">
+                                Tips: # - wall | ^, >, v, < - player and position | @ - target (optional)
+                            </div>
                         </div>
                     </div>
                     <div class="game-settings">
-                        <div class="speed">
+                        <div class="speed" id="speed-control">
                             Speed: <input type="number" width="50" min="0" max="1000" id="speed-input"> ms
                         </div>
                         <button type="button" id="edit-button">Edit</button>

@@ -61,6 +61,10 @@ button[disabled] {
 .grid-wall {
     background-color: dimgrey;
 }
+.tips {
+    font-weight: bold;
+    margin-bottom: 2%;
+}
 .speed {
     float: left;
     margin-left: 20%;
@@ -75,7 +79,6 @@ button[disabled] {
     line-height: 90%;
     letter-spacing: 5px;
     font-weight: bold;
-    font-size: 25px;
 }
 #speed-input {
     width: 50px;

@@ -396,7 +396,7 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
             if (this._playerPosition && (this._playerPosition.row != playerPos.row || this._playerPosition.col != playerPos.col)) {
                 cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
                 if (leaveStep)
-                    cell.innerHTML = "<img src=\"" + this.STEPS_IMG + "\" width=\"" + this._size + "\" height=\"" + this._size + "\" style=\"opacity: 0.5; " + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
+                    cell.innerHTML = this.getImage(this.STEPS_IMG, .5);
                 else
                     cell.innerHTML = '';
             }
@@ -406,7 +406,13 @@ define("views/map.view", ["require", "exports", "models/map.model"], function (r
                 direction: playerPos.direction
             };
             cell = this._mapGrid[this._playerPosition.row][this._playerPosition.col];
-            cell.innerHTML = "<img src=\"" + this.ARROW_IMG + "\" width=\"" + this._size + "\" height=\"" + this._size + "\" style=\"" + this.DIRECTION_TRANSFORMS[this._playerPosition.direction] + "\">";
+            cell.innerHTML = this.getImage(this.ARROW_IMG);
+        };
+        MapView.prototype.getImage = function (path, opacity) {
+            if (opacity === void 0) { opacity = 1; }
+            return "<img src=\"" + path + "\" \n                width=\"" + this._size + "\" height=\"" + this._size + "\" \n                style=\"opacity: opacity; " + (this._playerPosition ?
+                this.DIRECTION_TRANSFORMS[this._playerPosition.direction]
+                : '') + "\">";
         };
         return MapView;
     }());
@@ -428,10 +434,26 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
             this._map = new map_model_2.MapModel();
             this._gameTab = document.getElementById('game-tab');
             this._editTab = document.getElementById('edit-tab');
+            this._speedControl = document.getElementById('speed-control');
             this._editArea = document.getElementById('edit-area');
+            this._editArea.addEventListener('paste', this.updateEditAreaSize.bind(this));
+            this._editArea.addEventListener('keyup', this.updateEditAreaSize.bind(this));
+            window.addEventListener('resize', this.updateEditAreaSize.bind(this));
             this.loadDefaultMap();
             this._controlsService.subscribeEditClick(this.onEditClick.bind(this));
         }
+        MapEditService.prototype.updateEditAreaSize = function () {
+            if (!this._editArea.value || this._editArea.value.length === 0) {
+                return;
+            }
+            var sizes = this._editArea.value.split('\n');
+            var h = sizes.length;
+            var w = sizes.reduce(function (max, row) {
+                return Math.max(max, row.length);
+            }, 0);
+            var size = Math.min(Math.floor(this._editArea.offsetWidth / w), Math.floor(this._editArea.offsetHeight / h));
+            this._editArea.style.fontSize = size + 'px';
+        };
         MapEditService.prototype.loadDefaultMap = function () {
             this._editArea.textContent = this.DEFAULT_MAP;
             this.toggleEditMode(false);
@@ -448,13 +470,16 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
                 this._controlsService.deactivateStartButton();
                 this._controlsService.switchEditState(controls_service_1.EditStates.SAVE);
                 this._gameTab.style.display = 'none';
+                this._speedControl.style.display = 'none';
                 this._editTab.style.display = 'block';
+                this.updateEditAreaSize();
             }
             else {
                 if (this._map.init(this._editArea.value) && this.findPath()) {
                     this._controlsService.activateStartButton();
                     this._controlsService.switchEditState(controls_service_1.EditStates.EDIT);
                     this._gameTab.style.display = 'block';
+                    this._speedControl.style.display = 'block';
                     this._editTab.style.display = 'none';
                     this._mapView.buildMap(this._map.content, this._map.player);
                 }
@@ -533,9 +558,9 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this.GAME_BEGIN_MESSAGE = 'Game begins!';
             this.AMOUNT_PLACEHOLDER = '{amount}';
             this.MOVE_FORWARD_MESSAGE = "Move forward " + this.AMOUNT_PLACEHOLDER + " steps.";
-            this.TURN_LEFT_MESSAGE = "Turn left...";
-            this.TURN_RIGHT_MESSAGE = "Turn right...";
-            this.TURN_AROUND_MESSAGE = "Turn around...";
+            this.TURN_LEFT_MESSAGE = "Turn left and";
+            this.TURN_RIGHT_MESSAGE = "Turn right and";
+            this.TURN_AROUND_MESSAGE = "Turn around and";
             this.EXIT_MESSAGE = "Exit!";
             this.DEFAULT_STEP_TIME = 1000;
             this.DIRECTION_ANGLES = (_a = {},
