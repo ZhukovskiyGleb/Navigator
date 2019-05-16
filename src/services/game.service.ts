@@ -10,9 +10,9 @@ export class GameService implements Injectable {
     private readonly GAME_BEGIN_MESSAGE = 'Game begins!';
     private readonly AMOUNT_PLACEHOLDER = '{amount}';
     private readonly MOVE_FORWARD_MESSAGE = `Move forward ${this.AMOUNT_PLACEHOLDER} steps.`;
-    private readonly TURN_LEFT_MESSAGE = `Turn left...`;
-    private readonly TURN_RIGHT_MESSAGE = `Turn right...`;
-    private readonly TURN_AROUND_MESSAGE = `Turn around...`;
+    private readonly TURN_LEFT_MESSAGE = `Turn left and`;
+    private readonly TURN_RIGHT_MESSAGE = `Turn right and`;
+    private readonly TURN_AROUND_MESSAGE = `Turn around and`;
     private readonly EXIT_MESSAGE = `Exit!`;
 
     private readonly DEFAULT_STEP_TIME = 1000;
