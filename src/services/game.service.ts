@@ -4,7 +4,7 @@ import {MapEditService} from "./map-edit.service";
 import {Injectable, Injector} from "../utils/injector.util";
 import {MapView} from "../views/map.view";
 import {Direction, PlayerPosition} from "../models/map.model";
-import {Cell, isEqual} from "../utils/utils";
+import {Cell, isEqual, setEqual} from "../utils/utils";
 
 export class GameService implements Injectable {
     private readonly GAME_BEGIN_MESSAGE = 'Game begins!';
@@ -92,9 +92,11 @@ export class GameService implements Injectable {
         this._timer = setTimeout(() => {
             if (!this._player) return;
 
-            let {targetCell, steps, targetAngle} = this.calculateNextStepParams();
+            let targetCell: Cell = {row: 0, col: 0};
 
-            targetCell = this.movePlayer(targetCell, steps, targetAngle);
+            let {steps, targetAngle} = this.calculateNextStepParams(targetCell);
+
+            this.movePlayer(targetCell, steps, targetAngle);
 
             if (isEqual(this._player, targetCell)) {
                 this.removePassedCells(steps);
@@ -113,25 +115,26 @@ export class GameService implements Injectable {
         }, this._controlsService.stepDelay);
     }
 
-    private calculateNextStepParams():{targetCell: Cell, steps: number, targetAngle: number} {
-        let targetCell: Cell;
+    private calculateNextStepParams(targetCell: Cell): {steps: number, targetAngle: number} {
         let steps = 0;
         let targetAngle = 0;
 
         do {
-            targetCell = this._path[steps];
+            setEqual(targetCell, this._path[steps]);
+
             targetAngle = this.calculateAngle(targetCell);
             if (targetAngle === 0) {
                 steps ++;
             }
         } while (targetAngle === 0 && this._path.length > steps);
 
-        return {targetCell, steps, targetAngle};
+        return {steps, targetAngle};
     }
 
-    private movePlayer(targetCell: Cell, steps: number, targetAngle: number): Cell {
+    private movePlayer(targetCell: Cell, steps: number, targetAngle: number): void {
         if (steps > 0) {
-            targetCell = this._path[steps - 1];
+
+            setEqual(targetCell, this._path[steps - 1]);
 
             this._loggerService.log(this.MOVE_FORWARD_MESSAGE.replace(this.AMOUNT_PLACEHOLDER, steps.toString()));
             this.switchPosition(targetCell);
@@ -140,8 +143,6 @@ export class GameService implements Injectable {
             this._loggerService.log(this.getTurnMessage(targetAngle));
             this.switchDirection(targetAngle);
         }
-
-        return targetCell;
     }
 
     private removePassedCells(steps: number):void {

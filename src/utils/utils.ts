@@ -16,3 +16,8 @@ export function isExit(map: Array<Array<boolean | number>>, pos: Cell): boolean 
 export function isEqual(origin: Cell, target: Cell): boolean {
     return (origin.row === target.row && origin.col === target.col);
 }
+
+export function setEqual(origin: Cell, target: Cell): void{
+    origin.row = target.row;
+    origin.col = target.col;
+}

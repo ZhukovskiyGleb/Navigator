@@ -276,6 +276,11 @@ define("utils/utils", ["require", "exports"], function (require, exports) {
         return (origin.row === target.row && origin.col === target.col);
     }
     exports.isEqual = isEqual;
+    function setEqual(origin, target) {
+        origin.row = target.row;
+        origin.col = target.col;
+    }
+    exports.setEqual = setEqual;
 });
 define("utils/path-finder.util", ["require", "exports", "utils/utils"], function (require, exports, utils_1) {
     "use strict";
@@ -656,8 +661,9 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this._timer = setTimeout(function () {
                 if (!_this._player)
                     return;
-                var _a = _this.calculateNextStepParams(), targetCell = _a.targetCell, steps = _a.steps, targetAngle = _a.targetAngle;
-                targetCell = _this.movePlayer(targetCell, steps, targetAngle);
+                var targetCell = { row: 0, col: 0 };
+                var _a = _this.calculateNextStepParams(targetCell), steps = _a.steps, targetAngle = _a.targetAngle;
+                _this.movePlayer(targetCell, steps, targetAngle);
                 if (utils_2.isEqual(_this._player, targetCell)) {
                     _this.removePassedCells(steps);
                 }
@@ -672,22 +678,21 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                 }
             }, this._controlsService.stepDelay);
         };
-        GameService.prototype.calculateNextStepParams = function () {
-            var targetCell;
+        GameService.prototype.calculateNextStepParams = function (targetCell) {
             var steps = 0;
             var targetAngle = 0;
             do {
-                targetCell = this._path[steps];
+                utils_2.setEqual(targetCell, this._path[steps]);
                 targetAngle = this.calculateAngle(targetCell);
                 if (targetAngle === 0) {
                     steps++;
                 }
             } while (targetAngle === 0 && this._path.length > steps);
-            return { targetCell: targetCell, steps: steps, targetAngle: targetAngle };
+            return { steps: steps, targetAngle: targetAngle };
         };
         GameService.prototype.movePlayer = function (targetCell, steps, targetAngle) {
             if (steps > 0) {
-                targetCell = this._path[steps - 1];
+                utils_2.setEqual(targetCell, this._path[steps - 1]);
                 this._loggerService.log(this.MOVE_FORWARD_MESSAGE.replace(this.AMOUNT_PLACEHOLDER, steps.toString()));
                 this.switchPosition(targetCell);
             }
@@ -695,7 +700,6 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                 this._loggerService.log(this.getTurnMessage(targetAngle));
                 this.switchDirection(targetAngle);
             }
-            return targetCell;
         };
         GameService.prototype.removePassedCells = function (steps) {
             if (!this._player)
