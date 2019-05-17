@@ -88,7 +88,7 @@ export class MapEditService implements Injectable {
 
             this.updateEditAreaSize();
         } else {
-            if (this._map.init(this._editArea.value) && this.findPath()) {
+            if (this._map.update(this._editArea.value) && this.findPath()) {
                 this._controlsService.activateStartButton();
                 this._controlsService.switchEditState(EditStates.EDIT);
                 this._gameTab.style.display = 'block';

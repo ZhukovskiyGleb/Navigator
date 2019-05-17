@@ -27,12 +27,21 @@ export class MapView implements Injectable{
         }
 
         this.clear();
+        this.calculateSize(map);
+        this.parseMap(map);
+        this.movePlayer(playerPos, false);
 
+        this._mapArea.style.width = map.length ? (map[0].length) * this._size + 'px' : '0px';
+    }
+
+    private calculateSize(map: Array<Array<boolean>>): void {
         this._size = Math.min(
             Math.floor(window.innerWidth / map[0].length / 2),
             this.MAX_CELL_SIZE
         );
+    }
 
+    private parseMap(map: Array<Array<boolean>>): void {
         map.forEach((row: Array<boolean>, i: number) => {
 
             let rowDiv = <HTMLDivElement>document.createElement('div');
@@ -52,10 +61,6 @@ export class MapView implements Injectable{
             });
             this._mapArea.appendChild(rowDiv);
         });
-
-        this.movePlayer(playerPos, false);
-
-        this._mapArea.style.width = map.length ? (map[0].length) * this._size + 'px' : '0px';
     }
 
     public clear(): void {
@@ -97,7 +102,7 @@ export class MapView implements Injectable{
     private getImage(path: string, opacity: number = 1): string {
         return `<img src="${path}" 
                 width="${this._size}" height="${this._size}" 
-                style="opacity: opacity; ${
+                style="opacity: ${opacity}; ${
                     this._playerPosition ?
                     this.DIRECTION_TRANSFORMS[this._playerPosition.direction] 
                     : ''

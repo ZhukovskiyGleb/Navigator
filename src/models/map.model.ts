@@ -34,11 +34,19 @@ export class MapModel {
     private _playerPosition?: PlayerPosition;
     private _exitPosition?: ExitPosition;
 
-    public init(mapText: string | null): boolean {
+    public update(mapText: string | null): boolean {
         if (!mapText || mapText.length === 0) return false;
 
         this.clear();
 
+        let maxRowLength: number = this.parseMap(mapText);
+
+        this.fillEmptySpaces(maxRowLength);
+
+        return this.checkParseResults();
+    }
+
+    private parseMap(mapText: string): number {
         let maxRowLength: number = 0;
 
         mapText.split('\n')
@@ -78,17 +86,24 @@ export class MapModel {
                 }
             });
 
+        return maxRowLength;
+    }
+
+    private fillEmptySpaces(maxRowLength: number): void {
         this._map.forEach((row: Array<boolean>) => {
             while (row.length < maxRowLength) {
                 row.push(true);
             }
         });
+    }
 
+    private checkParseResults() {
         if (!this._playerPosition) {
             const keys = Object.keys({...this.DIRECTION_SIGNS});
             console.log(`Error: Player position [${keys}] not found!`);
             return false;
         }
+
         if (!this._exitPosition) {
             console.log(`Warning: Exit position [${this.EXIT_SIGN}] not found!`);
         }

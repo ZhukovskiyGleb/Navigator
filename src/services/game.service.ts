@@ -90,45 +90,17 @@ export class GameService implements Injectable {
 
     private nextStep(): void {
         this._timer = setTimeout(() => {
+            if (!this._player) return;
 
-            let targetCell: Cell;
+            let {targetCell, steps, targetAngle} = this.calculateNextStepParams();
 
-            if (this._player) {
-                let steps = 0;
-                let targetAngle = 0;
-                do {
-                    targetCell = this._path[steps];
-                    targetAngle = this.calculateAngle(targetCell);
-                    if (targetAngle === 0) {
-                        steps ++;
-                    }
-                } while (targetAngle === 0 && this._path.length > steps);
+            targetCell = this.movePlayer(targetCell, steps, targetAngle);
 
-                if (steps > 0) {
-                    targetCell = this._path[steps - 1];
-
-                    this._loggerService.log(this.MOVE_FORWARD_MESSAGE.replace(this.AMOUNT_PLACEHOLDER, steps.toString()));
-                    this.switchPosition(targetCell);
-                }
-                else {
-                    this._loggerService.log(this.getTurnMessage(targetAngle));
-                    this.switchDirection(targetAngle);
-                }
-
-                if (isEqual(this._player, targetCell)) {
-                    steps = Math.max(1, steps);
-                    while (steps > 0) {
-                        this._mapView.movePlayer({
-                            ...this._path[0],
-                            direction: this._player.direction
-                        });
-                        this._path.shift();
-                        steps --;
-                    }
-                }
-                else
-                    this._mapView.movePlayer(this._player);
+            if (isEqual(this._player, targetCell)) {
+                this.removePassedCells(steps);
             }
+            else
+                this._mapView.movePlayer(this._player);
 
             if (this._path.length > 0) {
                 this.nextStep();
@@ -139,6 +111,51 @@ export class GameService implements Injectable {
             }
 
         }, this._controlsService.stepDelay);
+    }
+
+    private calculateNextStepParams():{targetCell: Cell, steps: number, targetAngle: number} {
+        let targetCell: Cell;
+        let steps = 0;
+        let targetAngle = 0;
+
+        do {
+            targetCell = this._path[steps];
+            targetAngle = this.calculateAngle(targetCell);
+            if (targetAngle === 0) {
+                steps ++;
+            }
+        } while (targetAngle === 0 && this._path.length > steps);
+
+        return {targetCell, steps, targetAngle};
+    }
+
+    private movePlayer(targetCell: Cell, steps: number, targetAngle: number): Cell {
+        if (steps > 0) {
+            targetCell = this._path[steps - 1];
+
+            this._loggerService.log(this.MOVE_FORWARD_MESSAGE.replace(this.AMOUNT_PLACEHOLDER, steps.toString()));
+            this.switchPosition(targetCell);
+        }
+        else {
+            this._loggerService.log(this.getTurnMessage(targetAngle));
+            this.switchDirection(targetAngle);
+        }
+
+        return targetCell;
+    }
+
+    private removePassedCells(steps: number):void {
+        if (!this._player) return;
+
+        steps = Math.max(1, steps);
+        while (steps > 0) {
+            this._mapView.movePlayer({
+                ...this._path[0],
+                direction: this._player.direction
+            });
+            this._path.shift();
+            steps --;
+        }
     }
 
     public stopGame(): void {
