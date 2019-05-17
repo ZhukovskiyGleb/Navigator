@@ -11,12 +11,33 @@ export enum StartStates {
 }
 
 export class ControlsService implements Injectable{
+    private readonly DEFAULT_STEP_DELAY = 1000;
+
+    private readonly _speedControl: HTMLInputElement;
     private readonly _editButton: HTMLButtonElement;
     private readonly _startButton: HTMLButtonElement;
+
+    private _stepDelay: number = this.DEFAULT_STEP_DELAY;
 
     constructor() {
         this._editButton = document.getElementById('edit-button') as HTMLButtonElement;
         this._startButton = document.getElementById('start-button') as HTMLButtonElement;
+
+        this._speedControl = document.getElementById('speed-input') as HTMLInputElement;
+
+        this._speedControl.valueAsNumber = this.DEFAULT_STEP_DELAY;
+        this._speedControl.addEventListener('blur', () => {
+
+            if (this._speedControl.valueAsNumber > this.DEFAULT_STEP_DELAY) {
+                this._speedControl.valueAsNumber = this.DEFAULT_STEP_DELAY;
+            }
+            if (this._speedControl.valueAsNumber < 0) {
+                this._speedControl.valueAsNumber = 0;
+            }
+
+            this._stepDelay = this._speedControl.valueAsNumber;
+            console.log(this._stepDelay);
+        });
     }
 
     public subscribeEditClick(callback: Function): void {
@@ -57,5 +78,9 @@ export class ControlsService implements Injectable{
 
     public switchStartState(state: StartStates): void {
         this._startButton.innerText = state;
+    }
+
+    public get stepDelay(): number {
+        return this._stepDelay;
     }
 }

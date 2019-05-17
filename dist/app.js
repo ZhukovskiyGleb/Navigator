@@ -46,8 +46,23 @@ define("services/controls.service", ["require", "exports"], function (require, e
     })(StartStates = exports.StartStates || (exports.StartStates = {}));
     var ControlsService = /** @class */ (function () {
         function ControlsService() {
+            var _this = this;
+            this.DEFAULT_STEP_DELAY = 1000;
+            this._stepDelay = this.DEFAULT_STEP_DELAY;
             this._editButton = document.getElementById('edit-button');
             this._startButton = document.getElementById('start-button');
+            this._speedControl = document.getElementById('speed-input');
+            this._speedControl.valueAsNumber = this.DEFAULT_STEP_DELAY;
+            this._speedControl.addEventListener('blur', function () {
+                if (_this._speedControl.valueAsNumber > _this.DEFAULT_STEP_DELAY) {
+                    _this._speedControl.valueAsNumber = _this.DEFAULT_STEP_DELAY;
+                }
+                if (_this._speedControl.valueAsNumber < 0) {
+                    _this._speedControl.valueAsNumber = 0;
+                }
+                _this._stepDelay = _this._speedControl.valueAsNumber;
+                console.log(_this._stepDelay);
+            });
         }
         ControlsService.prototype.subscribeEditClick = function (callback) {
             if (this._editButton) {
@@ -81,6 +96,13 @@ define("services/controls.service", ["require", "exports"], function (require, e
         ControlsService.prototype.switchStartState = function (state) {
             this._startButton.innerText = state;
         };
+        Object.defineProperty(ControlsService.prototype, "stepDelay", {
+            get: function () {
+                return this._stepDelay;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return ControlsService;
     }());
     exports.ControlsService = ControlsService;
@@ -553,7 +575,6 @@ define("services/game.service", ["require", "exports", "services/controls.servic
     Object.defineProperty(exports, "__esModule", { value: true });
     var GameService = /** @class */ (function () {
         function GameService() {
-            var _this = this;
             var _a;
             this.GAME_BEGIN_MESSAGE = 'Game begins!';
             this.AMOUNT_PLACEHOLDER = '{amount}';
@@ -562,7 +583,6 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this.TURN_RIGHT_MESSAGE = "Turn right and";
             this.TURN_AROUND_MESSAGE = "Turn around and";
             this.EXIT_MESSAGE = "Exit!";
-            this.DEFAULT_STEP_TIME = 1000;
             this.DIRECTION_ANGLES = (_a = {},
                 _a[map_model_3.Direction.UP] = 0,
                 _a[map_model_3.Direction.DOWN] = 180,
@@ -582,16 +602,6 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this._mapService = injector_util_2.Injector.get(map_edit_service_1.MapEditService);
             this._mapView = injector_util_2.Injector.get(map_view_2.MapView);
             this._path = [];
-            this._speedControl = document.getElementById('speed-input');
-            this._speedControl.valueAsNumber = this.DEFAULT_STEP_TIME;
-            this._speedControl.addEventListener('blur', function () {
-                if (_this._speedControl.valueAsNumber > _this.DEFAULT_STEP_TIME) {
-                    _this._speedControl.valueAsNumber = _this.DEFAULT_STEP_TIME;
-                }
-                if (_this._speedControl.valueAsNumber < 0) {
-                    _this._speedControl.valueAsNumber = 0;
-                }
-            });
             this._controlsService.subscribeStartClick(this.onStartClick.bind(this));
             this.stopGame();
         }
@@ -666,7 +676,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                     _this._loggerService.log(_this.EXIT_MESSAGE);
                     _this.stopGame();
                 }
-            }, this._speedControl.valueAsNumber);
+            }, this._controlsService.stepDelay);
         };
         GameService.prototype.stopGame = function () {
             this.togglePlayMode(false);
