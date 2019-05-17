@@ -12,8 +12,8 @@ export interface PlayerPosition {
 }
 
 export interface ExitPosition {
-    row: number
-    col: number,
+    row: number,
+    col: number
 }
 
 export class MapModel {
