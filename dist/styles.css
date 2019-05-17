@@ -68,6 +68,13 @@ button[disabled] {
 .speed {
     float: left;
     margin-left: 20%;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: cadetblue;
+    border-radius: 75px;
+    border-color: transparent;
+    font-weight: bold;
+    color: white;
 }
 #log-area, #edit-area {
     width: 100%;
