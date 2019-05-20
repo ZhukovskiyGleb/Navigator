@@ -7,8 +7,8 @@ import {Injector} from "./utils/injector.util";
 
 class Main {
     constructor() {
-        Injector.inject(ControlsService);
         Injector.inject(MapView);
+        Injector.inject(ControlsService);
         Injector.inject(MapEditService);
         Injector.inject(LoggerService);
         Injector.inject(GameService);

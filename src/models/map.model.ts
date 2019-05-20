@@ -63,30 +63,34 @@ export class MapModel {
                             } else {
                                 this._map[i][j] = true;
 
-                                if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
-                                    if (this._playerPosition) {
-                                        console.log('Warning: Player position duplication!');
-                                    }
-                                    this._playerPosition = {
-                                        row: i,
-                                        col: j,
-                                        direction: this.DIRECTION_SIGNS[sign]
-                                    };
-                                } else if (sign === this.EXIT_SIGN) {
-                                    if (this._exitPosition) {
-                                        console.log('Warning: Exit position duplication!');
-                                    }
-                                    this._exitPosition = {
-                                        row: i,
-                                        col: j
-                                    };
-                                }
+                                this.checkForSpecialPositions(sign, i, j);
                             }
                         });
                 }
             });
 
         return maxRowLength;
+    }
+
+    private checkForSpecialPositions(sign: string, row: number, col: number): void {
+        if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
+            if (this._playerPosition) {
+                console.log('Warning: Player position duplication!');
+            }
+            this._playerPosition = {
+                row,
+                col,
+                direction: this.DIRECTION_SIGNS[sign]
+            };
+        } else if (sign === this.EXIT_SIGN) {
+            if (this._exitPosition) {
+                console.log('Warning: Exit position duplication!');
+            }
+            this._exitPosition = {
+                row,
+                col,
+            };
+        }
     }
 
     private fillEmptySpaces(maxRowLength: number): void {

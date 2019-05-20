@@ -46,12 +46,15 @@ define("services/controls.service", ["require", "exports"], function (require, e
     })(StartStates = exports.StartStates || (exports.StartStates = {}));
     var ControlsService = /** @class */ (function () {
         function ControlsService() {
-            var _this = this;
             this.DEFAULT_STEP_DELAY = 1000;
             this._stepDelay = this.DEFAULT_STEP_DELAY;
             this._editButton = document.getElementById('edit-button');
             this._startButton = document.getElementById('start-button');
             this._speedControl = document.getElementById('speed-input');
+            this.addSpeedEvents();
+        }
+        ControlsService.prototype.addSpeedEvents = function () {
+            var _this = this;
             this._speedControl.valueAsNumber = this.DEFAULT_STEP_DELAY;
             this._speedControl.addEventListener('blur', function () {
                 if (_this._speedControl.valueAsNumber > _this.DEFAULT_STEP_DELAY) {
@@ -61,9 +64,8 @@ define("services/controls.service", ["require", "exports"], function (require, e
                     _this._speedControl.valueAsNumber = 0;
                 }
                 _this._stepDelay = _this._speedControl.valueAsNumber;
-                console.log(_this._stepDelay);
             });
-        }
+        };
         ControlsService.prototype.subscribeEditClick = function (callback) {
             if (this._editButton) {
                 this._editButton.addEventListener('click', function () {
@@ -157,30 +159,33 @@ define("models/map.model", ["require", "exports"], function (require, exports) {
                         }
                         else {
                             _this._map[i][j] = true;
-                            if (_this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
-                                if (_this._playerPosition) {
-                                    console.log('Warning: Player position duplication!');
-                                }
-                                _this._playerPosition = {
-                                    row: i,
-                                    col: j,
-                                    direction: _this.DIRECTION_SIGNS[sign]
-                                };
-                            }
-                            else if (sign === _this.EXIT_SIGN) {
-                                if (_this._exitPosition) {
-                                    console.log('Warning: Exit position duplication!');
-                                }
-                                _this._exitPosition = {
-                                    row: i,
-                                    col: j
-                                };
-                            }
+                            _this.checkForSpecialPositions(sign, i, j);
                         }
                     });
                 }
             });
             return maxRowLength;
+        };
+        MapModel.prototype.checkForSpecialPositions = function (sign, row, col) {
+            if (this.DIRECTION_SIGNS.hasOwnProperty(sign)) {
+                if (this._playerPosition) {
+                    console.log('Warning: Player position duplication!');
+                }
+                this._playerPosition = {
+                    row: row,
+                    col: col,
+                    direction: this.DIRECTION_SIGNS[sign]
+                };
+            }
+            else if (sign === this.EXIT_SIGN) {
+                if (this._exitPosition) {
+                    console.log('Warning: Exit position duplication!');
+                }
+                this._exitPosition = {
+                    row: row,
+                    col: col,
+                };
+            }
         };
         MapModel.prototype.fillEmptySpaces = function (maxRowLength) {
             this._map.forEach(function (row) {
@@ -510,26 +515,32 @@ define("services/map-edit.service", ["require", "exports", "services/controls.se
             }
             this._inEditMode = value;
             if (this._inEditMode) {
-                this._controlsService.deactivateStartButton();
-                this._controlsService.switchEditState(controls_service_1.EditStates.SAVE);
-                this._gameTab.style.display = 'none';
-                this._speedControl.style.display = 'none';
-                this._editTab.style.display = 'block';
-                this.updateEditAreaSize();
+                this.setEditMode();
             }
             else {
                 if (this._map.update(this._editArea.value) && this.findPath()) {
-                    this._controlsService.activateStartButton();
-                    this._controlsService.switchEditState(controls_service_1.EditStates.EDIT);
-                    this._gameTab.style.display = 'block';
-                    this._speedControl.style.display = 'block';
-                    this._editTab.style.display = 'none';
-                    this._mapView.buildMap(this._map.content, this._map.player);
+                    this.setGameMode();
                 }
                 else {
                     alert('Wrong configuration!');
                 }
             }
+        };
+        MapEditService.prototype.setEditMode = function () {
+            this._controlsService.deactivateStartButton();
+            this._controlsService.switchEditState(controls_service_1.EditStates.SAVE);
+            this._gameTab.style.display = 'none';
+            this._speedControl.style.display = 'none';
+            this._editTab.style.display = 'block';
+            this.updateEditAreaSize();
+        };
+        MapEditService.prototype.setGameMode = function () {
+            this._controlsService.activateStartButton();
+            this._controlsService.switchEditState(controls_service_1.EditStates.EDIT);
+            this._gameTab.style.display = 'block';
+            this._speedControl.style.display = 'block';
+            this._editTab.style.display = 'none';
+            this._mapView.buildMap(this._map.content, this._map.player);
         };
         MapEditService.prototype.findPath = function () {
             this._path = path_finder_util_1.PathFinder.find(this._map.content, {
@@ -636,25 +647,28 @@ define("services/game.service", ["require", "exports", "services/controls.servic
             this._isGameStarted = value;
             if (this._isGameStarted) {
                 this.startGame();
-                this._controlsService.deactivateEditButton();
-                this._controlsService.switchStartState(controls_service_2.StartStates.STOP);
-                this.nextStep();
             }
             else {
-                this._controlsService.activateEditButton();
-                this._controlsService.switchStartState(controls_service_2.StartStates.PLAY);
-                if (this._timer) {
-                    clearTimeout(this._timer);
-                }
+                this.stopGame();
             }
         };
         GameService.prototype.startGame = function () {
+            this._controlsService.deactivateEditButton();
+            this._controlsService.switchStartState(controls_service_2.StartStates.STOP);
             this._loggerService.clear();
             this._mapView.updateMap();
             this._player = this._mapService.playerClone;
             this._mapView.movePlayer(this._player, false);
             this._path = this._mapService.pathClone;
             this._loggerService.log(this.GAME_BEGIN_MESSAGE);
+            this.nextStep();
+        };
+        GameService.prototype.stopGame = function () {
+            this._controlsService.activateEditButton();
+            this._controlsService.switchStartState(controls_service_2.StartStates.PLAY);
+            if (this._timer) {
+                clearTimeout(this._timer);
+            }
         };
         GameService.prototype.nextStep = function () {
             var _this = this;
@@ -674,7 +688,7 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                 }
                 else {
                     _this._loggerService.log(_this.EXIT_MESSAGE);
-                    _this.stopGame();
+                    _this.togglePlayMode(false);
                 }
             }, this._controlsService.stepDelay);
         };
@@ -710,9 +724,6 @@ define("services/game.service", ["require", "exports", "services/controls.servic
                 this._path.shift();
                 steps--;
             }
-        };
-        GameService.prototype.stopGame = function () {
-            this.togglePlayMode(false);
         };
         GameService.prototype.calculateAngle = function (targetPos) {
             if (this._player) {
@@ -778,8 +789,8 @@ define("app", ["require", "exports", "services/controls.service", "services/map-
     Object.defineProperty(exports, "__esModule", { value: true });
     var Main = /** @class */ (function () {
         function Main() {
-            injector_util_3.Injector.inject(controls_service_3.ControlsService);
             injector_util_3.Injector.inject(map_view_3.MapView);
+            injector_util_3.Injector.inject(controls_service_3.ControlsService);
             injector_util_3.Injector.inject(map_edit_service_2.MapEditService);
             injector_util_3.Injector.inject(logger_service_2.LoggerService);
             injector_util_3.Injector.inject(game_service_1.GameService);

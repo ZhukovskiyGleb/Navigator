@@ -25,6 +25,10 @@ export class ControlsService implements Injectable{
 
         this._speedControl = document.getElementById('speed-input') as HTMLInputElement;
 
+        this.addSpeedEvents();
+    }
+
+    private addSpeedEvents():void {
         this._speedControl.valueAsNumber = this.DEFAULT_STEP_DELAY;
         this._speedControl.addEventListener('blur', () => {
 
@@ -36,7 +40,6 @@ export class ControlsService implements Injectable{
             }
 
             this._stepDelay = this._speedControl.valueAsNumber;
-            console.log(this._stepDelay);
         });
     }
 

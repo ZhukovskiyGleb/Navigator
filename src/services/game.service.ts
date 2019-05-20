@@ -60,23 +60,16 @@ export class GameService implements Injectable {
 
         if (this._isGameStarted) {
             this.startGame();
-
-            this._controlsService.deactivateEditButton();
-            this._controlsService.switchStartState(StartStates.STOP);
-
-            this.nextStep();
         }
         else {
-            this._controlsService.activateEditButton();
-            this._controlsService.switchStartState(StartStates.PLAY);
-
-            if (this._timer) {
-                clearTimeout(this._timer);
-            }
+            this.stopGame();
         }
     }
 
     private startGame(): void {
+        this._controlsService.deactivateEditButton();
+        this._controlsService.switchStartState(StartStates.STOP);
+
         this._loggerService.clear();
         this._mapView.updateMap();
 
@@ -86,6 +79,17 @@ export class GameService implements Injectable {
         this._path = this._mapService.pathClone;
 
         this._loggerService.log(this.GAME_BEGIN_MESSAGE);
+
+        this.nextStep();
+    }
+
+    public stopGame(): void {
+        this._controlsService.activateEditButton();
+        this._controlsService.switchStartState(StartStates.PLAY);
+
+        if (this._timer) {
+            clearTimeout(this._timer);
+        }
     }
 
     private nextStep(): void {
@@ -109,7 +113,7 @@ export class GameService implements Injectable {
             }
             else {
                 this._loggerService.log(this.EXIT_MESSAGE);
-                this.stopGame();
+                this.togglePlayMode(false);
             }
 
         }, this._controlsService.stepDelay);
@@ -157,10 +161,6 @@ export class GameService implements Injectable {
             this._path.shift();
             steps --;
         }
-    }
-
-    public stopGame(): void {
-        this.togglePlayMode(false);
     }
 
     private calculateAngle(targetPos: Cell): number {

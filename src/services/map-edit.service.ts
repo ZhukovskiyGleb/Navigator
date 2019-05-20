@@ -80,26 +80,34 @@ export class MapEditService implements Injectable {
         this._inEditMode = value;
 
         if (this._inEditMode) {
-            this._controlsService.deactivateStartButton();
-            this._controlsService.switchEditState(EditStates.SAVE);
-            this._gameTab.style.display = 'none';
-            this._speedControl.style.display = 'none';
-            this._editTab.style.display = 'block';
-
-            this.updateEditAreaSize();
+            this.setEditMode();
         } else {
             if (this._map.update(this._editArea.value) && this.findPath()) {
-                this._controlsService.activateStartButton();
-                this._controlsService.switchEditState(EditStates.EDIT);
-                this._gameTab.style.display = 'block';
-                this._speedControl.style.display = 'block';
-                this._editTab.style.display = 'none';
-
-                this._mapView.buildMap(this._map.content, this._map.player);
+                this.setGameMode();
             } else {
                 alert('Wrong configuration!');
             }
         }
+    }
+
+    private setEditMode():void {
+        this._controlsService.deactivateStartButton();
+        this._controlsService.switchEditState(EditStates.SAVE);
+        this._gameTab.style.display = 'none';
+        this._speedControl.style.display = 'none';
+        this._editTab.style.display = 'block';
+
+        this.updateEditAreaSize();
+    }
+
+    private setGameMode():void {
+        this._controlsService.activateStartButton();
+        this._controlsService.switchEditState(EditStates.EDIT);
+        this._gameTab.style.display = 'block';
+        this._speedControl.style.display = 'block';
+        this._editTab.style.display = 'none';
+
+        this._mapView.buildMap(this._map.content, this._map.player);
     }
 
     private findPath(): boolean {
